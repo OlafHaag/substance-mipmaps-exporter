@@ -1,0 +1,17 @@
+##################################################
+# List of files ignored when packaging the plugin
+##################################################
+
+# Ignore the packaging script.
+makepackage.py
+
+# Ignore the build directory.
+build/
+
+Ignore the example directory
+example/
+
+# Ignore compiled python modules.
+*.pyc
+__pycache__
+
