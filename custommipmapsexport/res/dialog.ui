@@ -60,27 +60,27 @@
        <property name="currentIndex">
         <number>0</number>
        </property>
-       <widget class="QWidget" name="tab_graph">
+       <widget class="QWidget" name="tab_1">
         <attribute name="title">
          <string>From graph</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout_2">
+          <layout class="QVBoxLayout" name="verticalLayout_t1">
            <item>
-            <layout class="QFormLayout" name="formLayout">
+            <layout class="QFormLayout" name="formLayout_t1">
              <property name="labelAlignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
              <item row="0" column="0">
-              <widget class="QLabel" name="label">
+              <widget class="QLabel" name="dest_label">
                <property name="text">
                 <string>Destination:</string>
                </property>
               </widget>
              </item>
              <item row="0" column="1">
-              <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <layout class="QHBoxLayout" name="horizontalLayout_dest">
                <item alignment="Qt::AlignTop">
                 <widget class="QLineEdit" name="edit_dest_t1">
                  <property name="minimumSize">
@@ -113,7 +113,7 @@
               </layout>
              </item>
              <item row="1" column="0">
-              <widget class="QLabel" name="label_2">
+              <widget class="QLabel" name="pattern_label">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -132,7 +132,7 @@
               </widget>
              </item>
              <item row="1" column="1">
-              <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <layout class="QHBoxLayout" name="horizontalLayout_pattern">
                <item alignment="Qt::AlignTop">
                 <widget class="QLineEdit" name="edit_pattern_t1"/>
                </item>
@@ -155,9 +155,9 @@
               </layout>
              </item>
              <item row="2" column="1">
-              <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <layout class="QHBoxLayout" name="horizontalLayout_preview">
                <item alignment="Qt::AlignLeft|Qt::AlignTop">
-                <widget class="QLabel" name="label_3">
+                <widget class="QLabel" name="preview_label">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                    <horstretch>0</horstretch>
@@ -204,7 +204,7 @@
             </layout>
            </item>
            <item alignment="Qt::AlignTop">
-            <widget class="QLabel" name="label_5">
+            <widget class="QLabel" name="outputs_label">
              <property name="font">
               <font>
                <pointsize>9</pointsize>
@@ -258,7 +258,7 @@
             </widget>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <layout class="QHBoxLayout" name="horizontalLayout_sel_btns">
              <item>
               <spacer name="horizontalSpacer_5">
                <property name="orientation">
@@ -321,9 +321,9 @@
             </spacer>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout">
+            <layout class="QHBoxLayout" name="horizontalLayout_res">
              <item>
-              <widget class="QLabel" name="label_4">
+              <widget class="QLabel" name="max_res_label">
                <property name="text">
                 <string>Max. Resolution:</string>
                </property>
@@ -405,13 +405,13 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tab_batch">
+       <widget class="QWidget" name="tab_2">
         <attribute name="title">
          <string>Batch</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_5">
          <item>
-          <widget class="QLabel" name="label_6">
+          <widget class="QLabel" name="nothing_label">
            <property name="enabled">
             <bool>false</bool>
            </property>
@@ -457,7 +457,7 @@
     </layout>
    </item>
    <item>
-    <widget class="QProgressBar" name="progressBar">
+    <widget class="QProgressBar" name="progress_bar">
      <property name="value">
       <number>24</number>
      </property>
