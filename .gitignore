@@ -2,6 +2,9 @@
 # Created by https://www.gitignore.io/api/code,python,pycharm,windows
 # Edit at https://www.gitignore.io/?templates=code,python,pycharm,windows
 
+### Substance Designer ###
+example/.autosave
+
 ### Code ###
 .vscode/
 .vscode/*
