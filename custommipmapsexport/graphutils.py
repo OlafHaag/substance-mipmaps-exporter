@@ -7,6 +7,14 @@ from sd.api.sdproperty import SDPropertyCategory
 from sd.api.sdvaluetexture import SDValueTexture
 
 
+def find_package_of_graph(graph):
+    # Thanks to NevTD from substance3d forum.
+    pkg_manager = sd.getContext().getSDApplication().getPackageMgr()
+    for pkg in pkg_manager.getUserPackages():
+        if pkg.findResourceFromUrl(graph.getUrl()):
+            return pkg
+        
+        
 def save_test():
     """ This is a temporary function that's just a reminder. """
     sdContext = sd.getContext()

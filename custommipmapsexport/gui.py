@@ -6,6 +6,8 @@ from PySide2 import QtCore, QtGui, QtWidgets, QtUiTools, QtSvg
 
 import sd
 
+from .graphutils import find_package_of_graph
+
 DEFAULT_ICON_SIZE = 24
 
 
@@ -18,17 +20,18 @@ def get_ui_manager():
 
 class ExportDialog(QtCore.QObject):
     """ Handles all the events in the ui. """
-    def __init__(self, ui_file, parent=None):
+    def __init__(self, ui_file, graphview_id, parent=None):
         super(ExportDialog, self).__init__(parent)
         ui_file = QtCore.QFile(ui_file)
         ui_file.open(QtCore.QFile.ReadOnly)
-        
         loader = QtUiTools.QUiLoader()
         self.window = loader.load(ui_file)
         ui_file.close()
         
+        self.__graph = get_ui_manager().getGraphFromGraphViewID(graphview_id)
+        
         # State variables' defaults.
-        self.destination_path = str(Path.cwd())  # ToDo: Get package path from some graphutils func.
+        self.destination_path = str(Path(self.get_pkg_path()).parent)
         
         # Get references to widgets.
         self.dest_edit_tab1 = self.window.findChild(QtWidgets.QLineEdit, 'edit_dest_t1')
@@ -57,6 +60,11 @@ class ExportDialog(QtCore.QObject):
     def show(self):
         # Todo: populate tree view.
         self.window.show()
+
+    def get_pkg_path(self):
+        pkg = find_package_of_graph(self.__graph)
+        path = pkg.getFilePath()
+        return path
         
     def populate_combobox(self, box):
         pass
@@ -140,7 +148,7 @@ class MipMapExportGraphToolBar(QtWidgets.QToolBar):
     
     def load_ui(self, filename, parent=None):
         """ Returns an instance of the exporter dialog. """
-        ui = ExportDialog(filename, parent)
+        ui = ExportDialog(filename, self.__graphViewID, parent)
         return ui
     
     @classmethod
