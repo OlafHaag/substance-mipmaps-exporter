@@ -38,8 +38,8 @@ class ExportDialog(QtCore.QObject):
         self.edit_pattern_t1 = self.window.findChild(QtWidgets.QLineEdit, 'edit_pattern_t1')
         self.pattern_preview_t1 = self.window.findChild(QtWidgets.QLabel, 'pattern_preview_t1')
         self.tree_view_t1 = self.window.findChild(QtWidgets.QTreeView, 'tree_view_t1')
-        self.combobox_res_t1 = self.window.findChild(QtWidgets.QCheckBox, 'comboBox_res')
-        self.check_graph_res_t1 = self.window.findChild(QtWidgets.QCheckBox, 'check_graph_res')
+        self.combobox_res_t1 = self.window.findChild(QtWidgets.QComboBox, 'comboBox_res_t1')
+        self.check_graph_res_t1 = self.window.findChild(QtWidgets.QCheckBox, 'check_graph_res_t1')
         btn_browse_t1 = self.window.findChild(QtWidgets.QPushButton, 'btn_browse_t1')
         btn_sel_all_t1 = self.window.findChild(QtWidgets.QPushButton, 'btn_sel_all_t1')
         btn_sel_none_t1 = self.window.findChild(QtWidgets.QPushButton, 'btn_sel_none_t1')
@@ -52,6 +52,7 @@ class ExportDialog(QtCore.QObject):
         # Connect widgets to actions.
         self.dest_edit_tab1.editingFinished.connect(self.update_destination)
         self.edit_pattern_t1.editingFinished.connect(self.update_pattern)
+        self.combobox_res_t1.currentIndexChanged.connect(self.combobox_res_tab1_handler)
         btn_sel_all_t1.clicked.connect(self.select_all_handler_tab1())
         btn_sel_none_t1.clicked.connect(self.select_none_handler_tab1())
         btn_browse_t1.clicked.connect(self.browse_handler_tab1)
@@ -67,6 +68,12 @@ class ExportDialog(QtCore.QObject):
         return path
         
     def populate_combobox(self, box):
+        resolutions = [str(2**i) for i in range(14)]
+        resolutions.reverse()
+        self.combobox_res_t1.addItems(resolutions)
+        self.combobox_res_t1.setCurrentIndex(2)
+
+    def combobox_res_tab1_handler(self):
         pass
     
     def update_destination(self, path=None):

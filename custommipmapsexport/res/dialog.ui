@@ -339,12 +339,12 @@
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="comboBox_res">
+              <widget class="QComboBox" name="comboBox_res_t1">
                <property name="currentText">
                 <string/>
                </property>
                <property name="maxCount">
-                <number>13</number>
+                <number>14</number>
                </property>
               </widget>
              </item>
@@ -365,7 +365,7 @@
               </spacer>
              </item>
              <item>
-              <widget class="QCheckBox" name="check_graph_res">
+              <widget class="QCheckBox" name="check_graph_res_t1">
                <property name="text">
                 <string>Use graph's resolution</string>
                </property>
@@ -509,9 +509,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>check_graph_res</sender>
+   <sender>check_graph_res_t1</sender>
    <signal>toggled(bool)</signal>
-   <receiver>comboBox_res</receiver>
+   <receiver>comboBox_res_t1</receiver>
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
