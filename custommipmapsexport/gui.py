@@ -4,8 +4,16 @@ from pathlib import Path
 
 from PySide2 import QtCore, QtGui, QtWidgets, QtUiTools, QtSvg
 
+import sd
 
 DEFAULT_ICON_SIZE = 24
+
+
+def get_ui_manager():
+    ctx = sd.getContext()
+    app = ctx.getSDApplication()
+    ui_manager = app.getQtForPythonUIMgr()
+    return ui_manager
 
 
 class ExportDialog(QtCore.QObject):

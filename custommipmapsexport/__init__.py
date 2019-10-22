@@ -1,17 +1,6 @@
 from functools import partial
 
-# Designer imports
-import sd
-
-
-from .gui import MipMapExportGraphToolBar, on_new_graphview_created
-
-
-def get_ui_manager():
-    ctx = sd.getContext()
-    app = ctx.getSDApplication()
-    ui_manager = app.getQtForPythonUIMgr()
-    return ui_manager
+from .gui import get_ui_manager, MipMapExportGraphToolBar, on_new_graphview_created
 
 
 #
