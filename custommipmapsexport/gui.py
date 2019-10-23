@@ -6,7 +6,7 @@ from PySide2 import QtCore, QtGui, QtWidgets, QtUiTools, QtSvg
 
 import sd
 
-from .graphutils import find_package_of_graph
+from .graphutils import find_package_of_graph, get_group_mapping
 
 DEFAULT_ICON_SIZE = 24
 
@@ -34,32 +34,35 @@ class ExportDialog(QtCore.QObject):
         self.destination_path = str(Path(self.get_pkg_path()).parent)
         
         # Get references to widgets.
-        self.dest_edit_tab1 = self.window.findChild(QtWidgets.QLineEdit, 'edit_dest_t1')
-        self.edit_pattern_t1 = self.window.findChild(QtWidgets.QLineEdit, 'edit_pattern_t1')
-        self.pattern_preview_t1 = self.window.findChild(QtWidgets.QLabel, 'pattern_preview_t1')
-        self.tree_view_t1 = self.window.findChild(QtWidgets.QTreeView, 'tree_view_t1')
-        self.combobox_res_t1 = self.window.findChild(QtWidgets.QComboBox, 'comboBox_res_t1')
-        self.check_graph_res_t1 = self.window.findChild(QtWidgets.QCheckBox, 'check_graph_res_t1')
-        btn_browse_t1 = self.window.findChild(QtWidgets.QPushButton, 'btn_browse_t1')
-        btn_sel_all_t1 = self.window.findChild(QtWidgets.QPushButton, 'btn_sel_all_t1')
-        btn_sel_none_t1 = self.window.findChild(QtWidgets.QPushButton, 'btn_sel_none_t1')
-        btn_export_t1 = self.window.findChild(QtWidgets.QPushButton, 'btn_export_t1')
+        self.dest_edit_tab1 = self.window.findChild(QtWidgets.QLineEdit, 'edit_dest')
+        self.combobox_comp = self.window.findChild(QtWidgets.QComboBox, 'comboBox_compression')
+        self.edit_pattern = self.window.findChild(QtWidgets.QLineEdit, 'edit_pattern')
+        self.pattern_preview = self.window.findChild(QtWidgets.QLabel, 'pattern_preview')
+        self.tree = self.window.findChild(QtWidgets.QTreeWidget, 'tree')
+        self.combobox_res = self.window.findChild(QtWidgets.QComboBox, 'comboBox_res')
+        self.check_graph_res = self.window.findChild(QtWidgets.QCheckBox, 'check_graph_res')
+        btn_browse = self.window.findChild(QtWidgets.QPushButton, 'btn_browse')
+        btn_sel_all = self.window.findChild(QtWidgets.QPushButton, 'btn_sel_all')
+        btn_sel_none = self.window.findChild(QtWidgets.QPushButton, 'btn_sel_none')
+        btn_export = self.window.findChild(QtWidgets.QPushButton, 'btn_export')
         
         # Populate widgets with defaults.
         self.dest_edit_tab1.setText(self.destination_path)
-        self.populate_combobox(self.combobox_res_t1)
+        self.populate_combobox_compression(self.combobox_comp)
+        self.populate_combobox_resolution(self.combobox_res)
         
         # Connect widgets to actions.
         self.dest_edit_tab1.editingFinished.connect(self.update_destination)
-        self.edit_pattern_t1.editingFinished.connect(self.update_pattern)
-        self.combobox_res_t1.currentIndexChanged.connect(self.combobox_res_tab1_handler)
-        btn_sel_all_t1.clicked.connect(self.select_all_handler_tab1())
-        btn_sel_none_t1.clicked.connect(self.select_none_handler_tab1())
-        btn_browse_t1.clicked.connect(self.browse_handler_tab1)
-        btn_export_t1.clicked.connect(self.export_tab1_handler)
+        self.edit_pattern.editingFinished.connect(self.update_pattern)
+        self.combobox_res.currentIndexChanged.connect(self.combobox_res_tab1_handler)
+        btn_sel_all.clicked.connect(self.select_all_handler_tab1())
+        btn_sel_none.clicked.connect(self.select_none_handler_tab1())
+        btn_browse.clicked.connect(self.browse_handler_tab1)
+        btn_export.clicked.connect(self.export_tab1_handler)
     
     def show(self):
-        # Todo: populate tree view.
+        self.tree.clear()
+        self.populate_tree(self.tree)  # ToDo: Remember checked states.
         self.window.show()
 
     def get_pkg_path(self):
@@ -67,11 +70,29 @@ class ExportDialog(QtCore.QObject):
         path = pkg.getFilePath()
         return path
         
-    def populate_combobox(self, box):
+    def populate_tree(self, tree):
+        groups = get_group_mapping(self.__graph)
+        for group, ids in groups.items():
+            g = QtWidgets.QTreeWidgetItem([group])
+            g.setCheckState(0, QtCore.Qt.Checked)
+            items = list()
+            for identifier in ids:
+                item = QtWidgets.QTreeWidgetItem([identifier])
+                item.setCheckState(0, QtCore.Qt.Checked)
+                items.append(item)
+            g.addChildren(items)
+            self.tree.addTopLevelItem(g)
+            g.setExpanded(True)
+    
+    def populate_combobox_compression(self, box):
+        formats = [f"DXT{i}" for i in range(1, 6)]
+        box.addItems(formats)
+        
+    def populate_combobox_resolution(self, box):
         resolutions = [str(2**i) for i in range(14)]
         resolutions.reverse()
-        self.combobox_res_t1.addItems(resolutions)
-        self.combobox_res_t1.setCurrentIndex(2)
+        box.addItems(resolutions)
+        box.setCurrentIndex(2)
 
     def combobox_res_tab1_handler(self):
         pass

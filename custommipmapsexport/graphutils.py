@@ -14,7 +14,24 @@ def find_package_of_graph(graph):
         if pkg.findResourceFromUrl(graph.getUrl()):
             return pkg
         
-        
+
+def get_group_mapping(graph):
+    """ Return a dictionary with output groups as keys and labels as values. """
+    outputs = graph.getOutputNodes()
+    mapping = dict()
+    for out in outputs:
+        group = out.getAnnotationPropertyValueFromId('group').get()
+        if not group:
+            group = 'default'
+        identifier = out.getProperties(SDPropertyCategory.Output)[0].getId()  # Seems hacky, but works.
+        if group in mapping:
+            mapping[group].append(identifier)
+        else:
+            mapping[group] = [identifier]
+            
+    return mapping
+
+
 def save_test():
     """ This is a temporary function that's just a reminder. """
     sdContext = sd.getContext()
@@ -23,7 +40,7 @@ def save_test():
     graph = pkg.findResourceFromUrl('mip_level_export')
     
     # Get property object and inheritance value.
-    out_size_prp = graph.getPropertyFromId('$outputsize', sd.api.sdproperty.SDPropertyCategory.Input)
+    out_size_prp = graph.getPropertyFromId('$outputsize', SDPropertyCategory.Input)
     out_size_inheritance = graph.getPropertyInheritanceMethod(out_size_prp)   # Get inheritance.
     
     out_x, out_y = graph.getPropertyValue(out_size_prp).get()
