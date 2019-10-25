@@ -32,6 +32,7 @@ class ExportDialog(QtCore.QObject):
         
         # State variables' defaults.
         self.destination_path = str(Path(self.get_pkg_path()).parent)
+        self.unchecked_tree_items = list()  # list of uids.
         
         # Get references to widgets.
         self.dest_edit_tab1 = self.window.findChild(QtWidgets.QLineEdit, 'edit_dest')
@@ -54,15 +55,16 @@ class ExportDialog(QtCore.QObject):
         # Connect widgets to actions.
         self.dest_edit_tab1.editingFinished.connect(self.update_destination)
         self.edit_pattern.editingFinished.connect(self.update_pattern)
-        self.combobox_res.currentIndexChanged.connect(self.combobox_res_tab1_handler)
-        btn_sel_all.clicked.connect(self.select_all_handler_tab1())
-        btn_sel_none.clicked.connect(self.select_none_handler_tab1())
-        btn_browse.clicked.connect(self.browse_handler_tab1)
-        btn_export.clicked.connect(self.export_tab1_handler)
+        self.tree.itemClicked.connect(self.update_unchecked_items)
+        self.combobox_res.currentIndexChanged.connect(self.combobox_res_handler)
+        btn_sel_all.clicked.connect(self.select_all_handler())
+        btn_sel_none.clicked.connect(self.select_none_handler())
+        btn_browse.clicked.connect(self.browse_handler)
+        btn_export.clicked.connect(self.export_handler)
     
     def show(self):
         self.tree.clear()
-        self.populate_tree(self.tree)  # ToDo: Remember checked states.
+        self.populate_tree(self.tree)
         self.window.show()
 
     def get_pkg_path(self):
@@ -76,25 +78,41 @@ class ExportDialog(QtCore.QObject):
             g = QtWidgets.QTreeWidgetItem([group])
             g.setCheckState(0, QtCore.Qt.Checked)
             items = list()
-            for identifier in ids:
+            for identifier, uid in ids:
                 item = QtWidgets.QTreeWidgetItem([identifier])
-                item.setCheckState(0, QtCore.Qt.Checked)
+                item.setData(1, QtCore.Qt.EditRole, uid)
+                if uid in self.unchecked_tree_items:
+                    item.setCheckState(0, QtCore.Qt.Unchecked)
+                else:
+                    item.setCheckState(0, QtCore.Qt.Checked)
                 items.append(item)
             g.addChildren(items)
             self.tree.addTopLevelItem(g)
             g.setExpanded(True)
+            # ToDo: set group's checked state
     
     def populate_combobox_compression(self, box):
         formats = [f"DXT{i}" for i in range(1, 6)]
         box.addItems(formats)
         
     def populate_combobox_resolution(self, box):
-        resolutions = [str(2**i) for i in range(14)]
-        resolutions.reverse()
-        box.addItems(resolutions)
+        for i in range(13, -1, -1):
+            box.addItem(str(2**i), i)
         box.setCurrentIndex(2)
 
-    def combobox_res_tab1_handler(self):
+    def update_unchecked_items(self):
+        """ Rebuilds the unchecked items list.
+        Inefficient method. But we don't expect many outputs most of the time.
+        """
+        self.unchecked_tree_items.clear()
+        iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
+        while iterator.value():
+            item = iterator.value()
+            if item.text(1) and not item.checkState(0):  # Exclude groups.
+                self.unchecked_tree_items.append(item.text(1))
+            iterator += 1
+    
+    def combobox_res_handler(self):
         pass
     
     def update_destination(self, path=None):
@@ -109,13 +127,13 @@ class ExportDialog(QtCore.QObject):
         # ToDo: update preview
         pass
     
-    def select_all_handler_tab1(self):
-        print('Select all button clicked')
+    def select_all_handler(self):
+        print("Select all button clicked")
     
-    def select_none_handler_tab1(self):
-        print('Select none button clicked')
+    def select_none_handler(self):
+        print("Select none button clicked")
         
-    def browse_handler_tab1(self):
+    def browse_handler(self):
         # Launch directory browser.
         path = QtWidgets.QFileDialog.getExistingDirectory(parent=self.window,
                                                           caption="Select output folder",
@@ -123,8 +141,8 @@ class ExportDialog(QtCore.QObject):
         if path:
             self.update_destination(path)
         
-    def export_tab1_handler(self):
-        print('Export tab1 clicked.')
+    def export_handler(self):
+        print("Export tab1 clicked.")
 
 
 def load_svg_icon(icon_name, size):

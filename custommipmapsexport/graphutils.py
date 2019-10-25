@@ -16,7 +16,7 @@ def find_package_of_graph(graph):
         
 
 def get_group_mapping(graph):
-    """ Return a dictionary with output groups as keys and labels as values. """
+    """ Return a dictionary with output groups as keys and node's identifier, uid (tuple) as values. """
     outputs = graph.getOutputNodes()
     mapping = dict()
     for out in outputs:
@@ -24,10 +24,11 @@ def get_group_mapping(graph):
         if not group:
             group = 'default'
         identifier = out.getProperties(SDPropertyCategory.Output)[0].getId()  # Seems hacky, but works.
+        uid = out.getIdentifier()
         if group in mapping:
-            mapping[group].append(identifier)
+            mapping[group].append((identifier, uid))
         else:
-            mapping[group] = [identifier]
+            mapping[group] = [(identifier, uid)]
             
     return mapping
 
