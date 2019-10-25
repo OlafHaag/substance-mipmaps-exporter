@@ -57,8 +57,8 @@ class ExportDialog(QtCore.QObject):
         self.edit_pattern.editingFinished.connect(self.update_pattern)
         self.tree.itemClicked.connect(self.update_unchecked_items)
         self.combobox_res.currentIndexChanged.connect(self.combobox_res_handler)
-        btn_sel_all.clicked.connect(self.select_all_handler())
-        btn_sel_none.clicked.connect(self.select_none_handler())
+        btn_sel_all.clicked.connect(self.select_all)
+        btn_sel_none.clicked.connect(self.select_none)
         btn_browse.clicked.connect(self.browse_handler)
         btn_export.clicked.connect(self.export_handler)
     
@@ -87,7 +87,7 @@ class ExportDialog(QtCore.QObject):
                     item.setCheckState(0, QtCore.Qt.Checked)
                 items.append(item)
             g.addChildren(items)
-            self.tree.addTopLevelItem(g)
+            tree.addTopLevelItem(g)
             g.setExpanded(True)
             # ToDo: set group's checked state
     
@@ -112,6 +112,24 @@ class ExportDialog(QtCore.QObject):
                 self.unchecked_tree_items.append(item.text(1))
             iterator += 1
     
+    def select_all(self):
+        iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
+        while iterator.value():
+            item = iterator.value()
+            item.setCheckState(0, QtCore.Qt.Checked)
+            iterator += 1
+        self.unchecked_tree_items.clear()
+
+    def select_none(self):
+        iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
+        self.unchecked_tree_items.clear()
+        while iterator.value():
+            item = iterator.value()
+            item.setCheckState(0, QtCore.Qt.Unchecked)
+            if item.text(1):
+                self.unchecked_tree_items.append(item.text(1))
+            iterator += 1
+        
     def combobox_res_handler(self):
         pass
     
@@ -126,12 +144,6 @@ class ExportDialog(QtCore.QObject):
         # ToDo: regex
         # ToDo: update preview
         pass
-    
-    def select_all_handler(self):
-        print("Select all button clicked")
-    
-    def select_none_handler(self):
-        print("Select none button clicked")
         
     def browse_handler(self):
         # Launch directory browser.
@@ -143,6 +155,11 @@ class ExportDialog(QtCore.QObject):
         
     def export_handler(self):
         print("Export tab1 clicked.")
+        iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
+        while iterator.value():
+            item = iterator.value()
+            print(f"0: {item.text(0)}, 1: {item.text(1)}")
+            iterator += 1
 
 
 def load_svg_icon(icon_name, size):
