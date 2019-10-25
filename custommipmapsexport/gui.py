@@ -35,7 +35,7 @@ class ExportDialog(QtCore.QObject):
         self.unchecked_tree_items = list()  # list of uids.
         
         # Get references to widgets.
-        self.dest_edit_tab1 = self.window.findChild(QtWidgets.QLineEdit, 'edit_dest')
+        self.dest_edit = self.window.findChild(QtWidgets.QLineEdit, 'edit_dest')
         self.combobox_comp = self.window.findChild(QtWidgets.QComboBox, 'comboBox_compression')
         self.edit_pattern = self.window.findChild(QtWidgets.QLineEdit, 'edit_pattern')
         self.pattern_preview = self.window.findChild(QtWidgets.QLabel, 'pattern_preview')
@@ -48,19 +48,19 @@ class ExportDialog(QtCore.QObject):
         btn_export = self.window.findChild(QtWidgets.QPushButton, 'btn_export')
         
         # Populate widgets with defaults.
-        self.dest_edit_tab1.setText(self.destination_path)
+        self.dest_edit.setText(self.destination_path)
         self.populate_combobox_compression(self.combobox_comp)
         self.populate_combobox_resolution(self.combobox_res)
         
         # Connect widgets to actions.
-        self.dest_edit_tab1.editingFinished.connect(self.update_destination)
-        self.edit_pattern.editingFinished.connect(self.update_pattern)
-        self.tree.itemClicked.connect(self.update_unchecked_items)
-        self.combobox_res.currentIndexChanged.connect(self.combobox_res_handler)
-        btn_sel_all.clicked.connect(self.select_all)
-        btn_sel_none.clicked.connect(self.select_none)
-        btn_browse.clicked.connect(self.browse_handler)
-        btn_export.clicked.connect(self.export_handler)
+        self.dest_edit.editingFinished.connect(self.on_destination_changed)
+        self.edit_pattern.editingFinished.connect(self.on_pattern_changed)
+        self.tree.itemClicked.connect(self.on_tree_item_clicked)
+        self.combobox_res.currentIndexChanged.connect(self.on_resolution_changed)
+        btn_sel_all.clicked.connect(self.on_select_all)
+        btn_sel_none.clicked.connect(self.on_select_none)
+        btn_browse.clicked.connect(self.on_browse_destination)
+        btn_export.clicked.connect(self.on_export)
     
     def show(self):
         self.tree.clear()
@@ -74,9 +74,8 @@ class ExportDialog(QtCore.QObject):
         
     def populate_tree(self, tree):
         groups = get_group_mapping(self.__graph)
-        for group, ids in groups.items():
-            g = QtWidgets.QTreeWidgetItem([group])
-            g.setCheckState(0, QtCore.Qt.Checked)
+        for group_name, ids in groups.items():
+            group = QtWidgets.QTreeWidgetItem([group_name])
             items = list()
             for identifier, uid in ids:
                 item = QtWidgets.QTreeWidgetItem([identifier])
@@ -86,10 +85,10 @@ class ExportDialog(QtCore.QObject):
                 else:
                     item.setCheckState(0, QtCore.Qt.Checked)
                 items.append(item)
-            g.addChildren(items)
-            tree.addTopLevelItem(g)
-            g.setExpanded(True)
-            # ToDo: set group's checked state
+            group.addChildren(items)
+            tree.addTopLevelItem(group)
+            group.setExpanded(True)
+            self.update_group_checkstate(group)
     
     def populate_combobox_compression(self, box):
         formats = [f"DXT{i}" for i in range(1, 6)]
@@ -97,12 +96,46 @@ class ExportDialog(QtCore.QObject):
         
     def populate_combobox_resolution(self, box):
         for i in range(13, -1, -1):
-            box.addItem(str(2**i), i)
+            box.addItem(str(2**i), i)  # Set log2 as hidden value.
         box.setCurrentIndex(2)
 
+    def on_tree_item_clicked(self, item):
+        if self.tree.indexOfTopLevelItem(item) == -1:
+            self.update_group_checkstate(item.parent())
+        else:
+            self.on_group_clicked(item)
+        self.update_unchecked_items()
+    
+    def on_group_clicked(self, group):
+        n_children = group.childCount()
+        if group.checkState(0) == QtCore.Qt.Checked:
+            new_state = QtCore.Qt.Checked
+        elif group.checkState(0) == QtCore.Qt.Unchecked:
+            new_state = QtCore.Qt.Unchecked
+        else:  # Do nothing when partially checked.
+            return
+        
+        for i in range(n_children):
+            item = group.child(i)
+            item.setCheckState(0, new_state)
+    
+    def update_group_checkstate(self, group):
+        n_checked = 0
+        n_children = group.childCount()
+        for i in range(n_children):
+            item = group.child(i)
+            if item.checkState(0):
+                n_checked += 1
+        if n_checked == 0:
+            group.setCheckState(0, QtCore.Qt.Unchecked)
+        elif n_checked == n_children:
+            group.setCheckState(0, QtCore.Qt.Checked)
+        else:
+            group.setCheckState(0, QtCore.Qt.PartiallyChecked)
+    
     def update_unchecked_items(self):
         """ Rebuilds the unchecked items list.
-        Inefficient method. But we don't expect many outputs most of the time.
+        Inefficient method. But there aren't many calls expected.
         """
         self.unchecked_tree_items.clear()
         iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
@@ -110,56 +143,51 @@ class ExportDialog(QtCore.QObject):
             item = iterator.value()
             if item.text(1) and not item.checkState(0):  # Exclude groups.
                 self.unchecked_tree_items.append(item.text(1))
-            iterator += 1
+            next(iterator)
     
-    def select_all(self):
+    def on_select_all(self):
         iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
         while iterator.value():
             item = iterator.value()
             item.setCheckState(0, QtCore.Qt.Checked)
-            iterator += 1
+            next(iterator)
         self.unchecked_tree_items.clear()
 
-    def select_none(self):
+    def on_select_none(self):
         iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
         self.unchecked_tree_items.clear()
         while iterator.value():
             item = iterator.value()
             item.setCheckState(0, QtCore.Qt.Unchecked)
-            if item.text(1):
+            if item.text(1):  # Exclude groups.
                 self.unchecked_tree_items.append(item.text(1))
-            iterator += 1
+            next(iterator)
         
-    def combobox_res_handler(self):
+    def on_resolution_changed(self):
         pass
     
-    def update_destination(self, path=None):
+    def on_destination_changed(self, path=None):
         if not path:
-            self.destination_path = self.dest_edit_tab1.text()
+            self.destination_path = self.dest_edit.text()
         else:
             self.destination_path = path
-            self.dest_edit_tab1.setText(path)
+            self.dest_edit.setText(path)
     
-    def update_pattern(self):
+    def on_pattern_changed(self):
         # ToDo: regex
         # ToDo: update preview
         pass
         
-    def browse_handler(self):
+    def on_browse_destination(self):
         # Launch directory browser.
         path = QtWidgets.QFileDialog.getExistingDirectory(parent=self.window,
                                                           caption="Select output folder",
                                                           dir=self.destination_path)
         if path:
-            self.update_destination(path)
+            self.on_destination_changed(path)
         
-    def export_handler(self):
+    def on_export(self):
         print("Export tab1 clicked.")
-        iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
-        while iterator.value():
-            item = iterator.value()
-            print(f"0: {item.text(0)}, 1: {item.text(1)}")
-            iterator += 1
 
 
 def load_svg_icon(icon_name, size):
