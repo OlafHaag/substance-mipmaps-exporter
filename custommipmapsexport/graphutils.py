@@ -1,4 +1,5 @@
 from pathlib import Path
+from ctypes import string_at
 
 import sd
 from sd.api.sdvalueint2 import SDValueInt2
@@ -58,6 +59,20 @@ def get_output_name(graph, node_id, pattern):
         pattern = pattern.replace(k, v)
     return pattern
     
+    
+def get_sd_tex(node):
+    prop = node.getProperties(SDPropertyCategory.Output)[0]  # Take the first output.
+    value = node.getPropertyValue(prop)
+    sd_texture = SDValueTexture.get(value)
+    return sd_texture
+
+
+def get_tex_bytes(sd_tex):
+    dim_x, dim_y = sd_tex.getSize()
+    address = sd_tex.getPixelBufferAddress()
+    tex_b = string_at(address, dim_x * dim_y * sd_tex.getBytesPerPixel())
+    return tex_b
+
     
 def save_test():
     """ This is a temporary function that's just a reminder. """
