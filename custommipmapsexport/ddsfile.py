@@ -1,4 +1,4 @@
-'''
+"""
 DDS File library
 ================
 
@@ -45,7 +45,7 @@ DDS Format
             Reserved1 * 2
         Reserverd2
 
-'''
+"""
 
 from struct import pack, unpack, calcsize
 
@@ -88,6 +88,7 @@ DDS_DXT3 = 0x33545844
 DDS_DXT4 = 0x34545844
 DDS_DXT5 = 0x35545844
 
+
 def dxt_to_str(dxt):
     if dxt == DDS_DXT1:
         return 's3tc_dxt1'
@@ -107,6 +108,7 @@ def dxt_to_str(dxt):
         return 'luminance'
     elif dxt == 3:
         return 'luminance_alpha'
+
 
 def str_to_dxt(dxt):
     if dxt == 's3tc_dxt1':
@@ -128,11 +130,14 @@ def str_to_dxt(dxt):
     if dxt == 'luminance_alpha':
         return 3
 
+
 def align_value(val, b):
     return val + (-val % b)
 
+
 def check_flags(val, fl):
     return (val & fl) == fl
+
 
 def dxt_size(w, h, dxt):
     w = max(1, w // 4)
@@ -142,6 +147,7 @@ def dxt_size(w, h, dxt):
     elif dxt in (DDS_DXT2, DDS_DXT3, DDS_DXT4, DDS_DXT5):
         return w * h * 16
     return -1
+
 
 class QueryDict(dict):
     def __getattr__(self, attr):
@@ -155,6 +161,7 @@ class QueryDict(dict):
 
     def __setattr__(self, attr, value):
         self.__setitem__(attr, value)
+
 
 class DDSException(Exception):
     pass
