@@ -6,7 +6,7 @@ from PySide2 import QtCore, QtGui, QtWidgets, QtUiTools, QtSvg
 
 import sd
 
-from .graphutils import find_package_of_graph, get_group_mapping
+from .graphutils import find_package_of_graph, get_group_mapping, get_output_name
 
 DEFAULT_ICON_SIZE = 24
 
@@ -49,6 +49,7 @@ class ExportDialog(QtCore.QObject):
         
         # Populate widgets with defaults.
         self.dest_edit.setText(self.destination_path)
+        self.edit_pattern.setText("$(graph)_$(identifier)")
         self.populate_combobox_compression(self.combobox_comp)
         self.populate_combobox_resolution(self.combobox_res)
         
@@ -65,14 +66,33 @@ class ExportDialog(QtCore.QObject):
     def show(self):
         self.tree.clear()
         self.populate_tree(self.tree)
+        # If no outputs, show only warning.
+        if self.tree.invisibleRootItem().childCount() == 0:
+            self.show_warning("No Graph Outputs", "There is no output image to export from the selected graph.")
+            return
+        # Set the first output in the tree to be the current item.
+        current_item = self.tree.invisibleRootItem().child(0).child(0)
+        self.tree.setCurrentItem(current_item)
+        self.on_pattern_changed()
         self.window.show()
 
+    def show_warning(self, title, msg):
+        ui_mgr = get_ui_manager()
+        main_window = ui_mgr.getMainWindow()
+        msg_box = QtWidgets.QMessageBox(parent=main_window)
+        msg_box.setIcon(QtWidgets.QMessageBox.Information)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(msg)
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msg_box.exec()
+        
     def get_pkg_path(self):
         pkg = find_package_of_graph(self.__graph)
         path = pkg.getFilePath()
         return path
         
     def populate_tree(self, tree):
+        # ToDo: Move default to top if present.
         groups = get_group_mapping(self.__graph)
         for group_name, ids in groups.items():
             group = QtWidgets.QTreeWidgetItem([group_name])
@@ -102,6 +122,8 @@ class ExportDialog(QtCore.QObject):
     def on_tree_item_clicked(self, item):
         if self.tree.indexOfTopLevelItem(item) == -1:
             self.update_group_checkstate(item.parent())
+            self.tree.setCurrentItem(item)
+            self.on_pattern_changed()
         else:
             self.on_group_clicked(item)
         self.update_unchecked_items()
@@ -174,9 +196,13 @@ class ExportDialog(QtCore.QObject):
             self.dest_edit.setText(path)
     
     def on_pattern_changed(self):
-        # ToDo: regex
-        # ToDo: update preview
-        pass
+        """ Update the preview of the output name. """
+        if not self.edit_pattern.text():
+            self.edit_pattern.setText("$(identifier)")
+        
+        item = self.tree.currentItem()
+        preview = get_output_name(self.__graph, item.text(1), self.edit_pattern.text())
+        self.pattern_preview.setText(preview)
         
     def on_browse_destination(self):
         # Launch directory browser.

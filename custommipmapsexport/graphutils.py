@@ -33,6 +33,32 @@ def get_group_mapping(graph):
     return mapping
 
 
+def get_output_name(graph, node_id, pattern):
+    """
+    $(graph) - name of current Graph.
+    $(identifier) - identifier of current graph, from Graph Attributes.
+    $(description) - description of current graph, from Graph Attributes.
+    $(label) - Label of current graph, , from Graph Attributes.
+    $(user_data) - custom user data, from Graph Attributes.
+    $(group) - output group, from Graph Attributes.
+    """
+    node = graph.getNodeFromId(node_id)
+    mapping = dict()
+    mapping['$(graph)'] = graph.getIdentifier()
+    mapping['$(identifier)'] = node.getProperties(SDPropertyCategory.Output)[0].getId()
+    mapping['$(description)'] = node.getAnnotationPropertyValueFromId('description').get()
+    mapping['$(label)'] = node.getAnnotationPropertyValueFromId('label').get()
+    mapping['$(user_data)'] = node.getAnnotationPropertyValueFromId('userdata').get()
+    group = node.getAnnotationPropertyValueFromId('group').get()
+    if not group:
+        group = 'default'
+    mapping['$(group)'] = group
+    
+    for k, v in mapping.items():
+        pattern = pattern.replace(k, v)
+    return pattern
+    
+    
 def save_test():
     """ This is a temporary function that's just a reminder. """
     sdContext = sd.getContext()
