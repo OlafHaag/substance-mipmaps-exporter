@@ -57,7 +57,6 @@ class ExportDialog(QtCore.QObject):
         self.dest_edit.editingFinished.connect(self.on_destination_changed)
         self.edit_pattern.editingFinished.connect(self.on_pattern_changed)
         self.tree.itemClicked.connect(self.on_tree_item_clicked)
-        self.combobox_res.currentIndexChanged.connect(self.on_resolution_changed)
         btn_sel_all.clicked.connect(self.on_select_all)
         btn_sel_none.clicked.connect(self.on_select_none)
         btn_browse.clicked.connect(self.on_browse_destination)
@@ -185,9 +184,6 @@ class ExportDialog(QtCore.QObject):
                 self.unchecked_tree_items.append(item.text(1))
             next(iterator)
         
-    def on_resolution_changed(self):
-        pass
-    
     def on_destination_changed(self, path=None):
         if not path:
             self.destination_path = self.dest_edit.text()
@@ -218,9 +214,9 @@ class ExportDialog(QtCore.QObject):
 
 def load_svg_icon(icon_name, size):
     current_dir = Path(__file__).resolve().parent
-    icon_file = current_dir / (icon_name + '.svg')
+    icon_file = current_dir / "res" / (icon_name + '.svg')
 
-    svg_renderer = QtSvg.QSvgRenderer(icon_file)
+    svg_renderer = QtSvg.QSvgRenderer(str(icon_file))
     if svg_renderer.isValid():
         pixmap = QtGui.QPixmap(QtCore.QSize(size, size))
 
@@ -253,15 +249,15 @@ class MipMapExportGraphToolBar(QtWidgets.QToolBar):
         self.dialog = self.load_ui(str(ui_file), parent=ui_manager.getMainWindow())
         
         # Add actions to our toolbar.
-        act = self.addAction("MipMap Export")
-        act.setToolTip("Save each resolution of the selected output as a MipMap level to a DDS file.")
+        act = self.addAction(load_svg_icon("mipmapexport", DEFAULT_ICON_SIZE), "MipMap Export")
+        act.setToolTip("Export outputs with each resolution as a MIP-level to a DDS file.")
         act.triggered.connect(self.dialog.show)
         
         self.__toolbarList[graphview_id] = weakref.ref(self)
         self.destroyed.connect(partial(MipMapExportGraphToolBar.__on_toolbar_deleted, graphview_id=graphview_id))
     
     def tooltip(self):
-        return self.tr("MipMap Export Tools")
+        return self.tr("MipMap Tools")
     
     def load_ui(self, filename, parent=None):
         """ Returns an instance of the exporter dialog. """
@@ -287,5 +283,5 @@ def on_new_graphview_created(graphview_id, ui_manager):
     ui_manager.addToolbarToGraphView(
         graphview_id,
         toolbar,
-        icon=None,
-        tooltip="MipMap Export Toolbar")
+        icon=load_svg_icon("mipmaptools", DEFAULT_ICON_SIZE),
+        tooltip=toolbar.tooltip())
