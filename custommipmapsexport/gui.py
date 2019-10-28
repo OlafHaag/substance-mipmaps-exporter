@@ -6,7 +6,7 @@ from PySide2 import QtCore, QtGui, QtWidgets, QtUiTools, QtSvg
 
 import sd
 
-from .graphutils import find_package_of_graph, get_group_mapping, get_output_name
+from .graphutils import find_package_of_graph, get_group_mapping, get_output_name, export_dds_files
 
 DEFAULT_ICON_SIZE = 24
 
@@ -110,11 +110,33 @@ class ExportDialog(QtCore.QObject):
             self.update_group_checkstate(group)
     
     def populate_combobox_compression(self, box):
-        formats = [f"DXT{i}" for i in range(1, 6)]
+        formats = ['DXT1',
+                   'DXT2',
+                   'DXT3',
+                   'DXT4',
+                   'DXT5',
+                   '3DC',
+                   'DXN',
+                   'DXT5A',
+                   'DXT5_CCxY',
+                   'DXT5_xGxR',
+                   'DXT5_xGBR',
+                   'DXT5_AGBR',
+                   'DXT1A',
+                   'ETC1',
+                   'ETC2',
+                   'ETC2A',
+                   'ETC1S',
+                   'ETC2AS',
+                   'R8G8B8',
+                   'L8',
+                   'A8',
+                   'A8L8',
+                   'A8R8G8B']
         box.addItems(formats)
         
     def populate_combobox_resolution(self, box):
-        for i in range(13, -1, -1):
+        for i in range(13, 1, -1):  # Minimum resolution in a block compression is 4x4.
             box.addItem(str(2**i), i)  # Set log2 as hidden value.
         box.setCurrentIndex(2)
 
@@ -207,9 +229,32 @@ class ExportDialog(QtCore.QObject):
                                                           dir=self.destination_path)
         if path:
             self.on_destination_changed(path)
+    
+    def get_checked_output_uids(self):
+        checked_outputs = list()
+        iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
+        while iterator.value():
+            item = iterator.value()
+            if item.checkState(0) and item.text(1):  # Exclude groups.
+                checked_outputs.append(item.text(1))
+            next(iterator)
+        return checked_outputs
         
     def on_export(self):
-        print("Export tab1 clicked.")
+        output_uids = self.get_checked_output_uids()
+        if output_uids:
+            compression = self.combobox_comp.currentText().lower()
+            if not self.check_graph_res.isChecked():
+                max_res = self.combobox_res.itemData(self.combobox_res.currentIndex())
+            else:
+                max_res = None
+            
+            export_dds_files(self.__graph,
+                             output_uids,
+                             self.destination_path,
+                             self.edit_pattern.text(),
+                             compression,
+                             max_res)
 
 
 def load_svg_icon(icon_name, size):
@@ -249,7 +294,7 @@ class MipMapExportGraphToolBar(QtWidgets.QToolBar):
         self.dialog = self.load_ui(str(ui_file), parent=ui_manager.getMainWindow())
         
         # Add actions to our toolbar.
-        act = self.addAction(load_svg_icon("mipmapexport", DEFAULT_ICON_SIZE), "MipMap Export")
+        act = self.addAction(load_svg_icon("mipmapexport", DEFAULT_ICON_SIZE), "Export Custom MipMaps")
         act.setToolTip("Export outputs with each resolution as a MIP-level to a DDS file.")
         act.triggered.connect(self.dialog.show)
         
