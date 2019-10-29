@@ -34,35 +34,48 @@ class ExportDialog(QtCore.QObject):
         self.destination_path = str(Path(self.get_pkg_path()).parent)
         self.unchecked_tree_items = list()  # list of uids.
         
-        # Get references to widgets.
+        # Get references to widgets from tab1.
         self.dest_edit = self.window.findChild(QtWidgets.QLineEdit, 'edit_dest')
-        self.combobox_comp = self.window.findChild(QtWidgets.QComboBox, 'comboBox_compression')
-        self.edit_pattern = self.window.findChild(QtWidgets.QLineEdit, 'edit_pattern')
+        self.compression = self.window.findChild(QtWidgets.QComboBox, 'comboBox_compression')
+        self.pattern = self.window.findChild(QtWidgets.QLineEdit, 'edit_pattern')
         self.pattern_preview = self.window.findChild(QtWidgets.QLabel, 'pattern_preview')
         self.tree = self.window.findChild(QtWidgets.QTreeWidget, 'tree')
-        self.combobox_res = self.window.findChild(QtWidgets.QComboBox, 'comboBox_res')
-        self.check_graph_res = self.window.findChild(QtWidgets.QCheckBox, 'check_graph_res')
+        self.max_resolution = self.window.findChild(QtWidgets.QComboBox, 'comboBox_res')
+        self.use_graph_resolution = self.window.findChild(QtWidgets.QCheckBox, 'check_graph_res')
         btn_browse = self.window.findChild(QtWidgets.QPushButton, 'btn_browse')
         btn_sel_all = self.window.findChild(QtWidgets.QPushButton, 'btn_sel_all')
         btn_sel_none = self.window.findChild(QtWidgets.QPushButton, 'btn_sel_none')
-        btn_export = self.window.findChild(QtWidgets.QPushButton, 'btn_export')
-        btn_export_t2 = self.window.findChild(QtWidgets.QPushButton, 'btn_export_t2')
+        self.btn_export = self.window.findChild(QtWidgets.QPushButton, 'btn_export')
         self.feedback = self.window.findChild(QtWidgets.QLabel, 'feedback_label')
+        
+        # Get references to widgets from tab2.
+        self.quality = self.window.findChild(QtWidgets.QSpinBox, 'quality_spinBox')
+        self.dxt_quality = self.window.findChild(QtWidgets.QComboBox, 'dxt_quality_comboBox')
+        self.generate_mipmaps = self.window.findChild(QtWidgets.QGroupBox, 'mipsettings_groupBox')
+        self.filter = self.window.findChild(QtWidgets.QComboBox, 'mipfilter_comboBox')
+        self.gamma = self.window.findChild(QtWidgets.QDoubleSpinBox, 'gamma_spinBox')
+        self.blur = self.window.findChild(QtWidgets.QDoubleSpinBox, 'blur_spinBox')
+        self.max_mip_lvls = self.window.findChild(QtWidgets.QSpinBox, 'max_lvls_spinBox')
+        self.wrap = self.window.findChild(QtWidgets.QCheckBox, 'wrap_checkBox')
+        self.btn_export_t2 = self.window.findChild(QtWidgets.QPushButton, 'btn_export_t2')
         
         # Populate widgets with defaults.
         self.dest_edit.setText(self.destination_path)
-        self.edit_pattern.setText("$(graph)_$(identifier)")
-        self.populate_combobox_compression(self.combobox_comp)
-        self.populate_combobox_resolution(self.combobox_res)
+        self.pattern.setText("$(graph)_$(identifier)")
+        self.populate_compression(self.compression)
+        self.populate_resolution(self.max_resolution)
+        self.populate_dxt_quality()
+        self.populate_filter()
         
         # Connect widgets to actions.
         self.dest_edit.editingFinished.connect(self.on_destination_changed)
-        self.edit_pattern.editingFinished.connect(self.on_pattern_changed)
+        self.pattern.editingFinished.connect(self.on_pattern_changed)
         self.tree.itemClicked.connect(self.on_tree_item_clicked)
         btn_sel_all.clicked.connect(self.on_select_all)
         btn_sel_none.clicked.connect(self.on_select_none)
         btn_browse.clicked.connect(self.on_browse_destination)
-        btn_export.clicked.connect(self.on_export)
+        self.btn_export.clicked.connect(self.on_export)
+        self.btn_export_t2.clicked.connect(self.on_export)
     
     def show(self):
         self.tree.clear()
@@ -112,7 +125,7 @@ class ExportDialog(QtCore.QObject):
             group.setExpanded(True)
             self.update_group_checkstate(group)
     
-    def populate_combobox_compression(self, box):
+    def populate_compression(self, box):
         formats = ['DXT1',
                    'DXT2',
                    'DXT3',
@@ -138,10 +151,20 @@ class ExportDialog(QtCore.QObject):
                    'A8R8G8B']
         box.addItems(formats)
         
-    def populate_combobox_resolution(self, box):
+    def populate_resolution(self, box):
         for i in range(13, 1, -1):  # Minimum resolution in a block compression is 4x4.
             box.addItem(str(2**i), i)  # Set log2 as hidden value.
         box.setCurrentIndex(2)
+
+    def populate_dxt_quality(self):
+        options = ['superfast', 'fast', 'normal', 'better', 'uber']
+        self.dxt_quality.addItems(options)
+        self.dxt_quality.setCurrentIndex(4)
+        
+    def populate_filter(self):
+        options = ['box', 'tent', 'lanczos4', 'mitchell', 'kaiser']
+        self.filter.addItems(options)
+        self.filter.setCurrentIndex(4)
 
     def on_tree_item_clicked(self, item):
         if self.tree.indexOfTopLevelItem(item) == -1:
@@ -218,11 +241,11 @@ class ExportDialog(QtCore.QObject):
     
     def on_pattern_changed(self):
         """ Update the preview of the output name. """
-        if not self.edit_pattern.text():
-            self.edit_pattern.setText("$(identifier)")
+        if not self.pattern.text():
+            self.pattern.setText("$(identifier)")
         
         item = self.tree.currentItem()
-        preview = get_output_name(self.__graph, item.text(1), self.edit_pattern.text())
+        preview = get_output_name(self.__graph, item.text(1), self.pattern.text())
         self.pattern_preview.setText(preview)
         
     def on_browse_destination(self):
@@ -242,24 +265,50 @@ class ExportDialog(QtCore.QObject):
                 checked_outputs.append(item.text(1))
             next(iterator)
         return checked_outputs
+    
+    def get_advanced_settings(self):
+        settings = dict()
+        settings['-quality'] = str(self.quality.value())
+        settings['-dxtQuality'] = self.dxt_quality.currentText()
+        if self.generate_mipmaps.isChecked():
+            settings['-mipFilter'] = self.filter.currentText()
+            settings['-gamma'] = str(self.gamma.value())
+            settings['-blurriness'] = str(self.blur.value())
+            settings['-maxmips'] = str(self.max_mip_lvls.value())
+            if self.wrap.isChecked():
+                settings['-wrap'] = ''
+        else:
+            settings['-mipMode'] = 'None'
+        return settings
         
     def on_export(self):
         output_uids = self.get_checked_output_uids()
         if output_uids:
-            compression = self.combobox_comp.currentText().lower()
-            if not self.check_graph_res.isChecked():
-                max_res = self.combobox_res.itemData(self.combobox_res.currentIndex())
+            # Disable export buttons while processing.
+            self.btn_export.setEnabled(False)
+            self.btn_export_t2.setEnabled(False)
+            
+            compression = self.compression.currentText().lower()
+            if not self.use_graph_resolution.isChecked():
+                max_res = self.max_resolution.itemData(self.max_resolution.currentIndex())
             else:
                 max_res = None
+            
+            adv_settings = self.get_advanced_settings()
             
             self.feedback.setText("Exporting...")
             result = export_dds_files(self.__graph,
                                       output_uids,
                                       self.destination_path,
-                                      self.edit_pattern.text(),
+                                      self.pattern.text(),
                                       compression,
-                                      max_resolution=max_res)
+                                      max_resolution=max_res,
+                                      custom_lvls=False,
+                                      **adv_settings)
             self.feedback.setText(result)
+            # Enable Export buttons.
+            self.btn_export.setEnabled(True)
+            self.btn_export_t2.setEnabled(True)
 
 
 def load_svg_icon(icon_name, size):

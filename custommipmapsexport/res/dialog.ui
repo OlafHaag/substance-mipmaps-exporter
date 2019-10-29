@@ -875,9 +875,6 @@
           <layout class="QHBoxLayout" name="btn_box_t2">
            <item>
             <widget class="QPushButton" name="btn_export_t2">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
              <property name="text">
               <string>Export outputs</string>
              </property>

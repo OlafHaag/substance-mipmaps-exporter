@@ -93,7 +93,7 @@ def get_clamped_resolution(x, y, max_):
     return res_x, res_y
 
 
-def compress_files(files, destination, compression):
+def compress_files(files, destination, compression, **kwargs):
     crunch_app = Path(__file__).resolve().parent / 'bin' / 'crunch_x64'
     cmd = [str(crunch_app),
            '-nostats',
@@ -101,7 +101,12 @@ def compress_files(files, destination, compression):
            *chain(*[('-file', str(f)) for f in files]),
            '-fileformat', 'dds',
            '-outdir', str(destination),
-           f'-{compression}']
+           f'-{compression}',
+           *chain(*kwargs.items())]
+    try:
+        cmd.remove('')
+    except ValueError:
+        pass
     completed = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print(completed.stdout.decode())
     return completed.returncode
@@ -142,13 +147,13 @@ def wait_files_exist(files, timeout=20.0, interval=0.2):
             break
 
 
-def save_and_compress(intermediate_dir, destination_dir, textures, filenames, compression):
+def save_and_compress(intermediate_dir, destination_dir, textures, filenames, compression, **kwargs):
     # First, save to intermediate file when not compressing data ourselves.
     temp_files = save_textures(intermediate_dir, textures, filenames)
     # Make sure all temp files are saved before continuing to compression.
     wait_files_exist(temp_files)
     # Call program to compress saved files.
-    return_code = compress_files(temp_files, destination_dir, compression)
+    return_code = compress_files(temp_files, destination_dir, compression, **kwargs)
     if return_code == 0:
         feedback = "Export done"
     else:
@@ -156,7 +161,8 @@ def save_and_compress(intermediate_dir, destination_dir, textures, filenames, co
     return feedback
 
 
-def export_dds_files(graph, output_uids, destination, pattern, compression, max_resolution=None, custom_lvls=False):
+def export_dds_files(graph, output_uids, destination, pattern, compression, max_resolution=None, custom_lvls=False,
+                     **kwargs):
     out_data = get_nodes_data(graph, output_uids, pattern)
     
     # Create path if it doesn't exist.
@@ -192,7 +198,7 @@ def export_dds_files(graph, output_uids, destination, pattern, compression, max_
         # Make sure all the texture data is there.
         graph.compute()
         textures = [get_sd_tex(node) for node in out_data['nodes']]
-        feedback = save_and_compress(temp_dir, destination, textures, out_data['basenames'], compression)
+        feedback = save_and_compress(temp_dir, destination, textures, out_data['basenames'], compression, **kwargs)
     
     else:
         # ToDo: custom levels.
