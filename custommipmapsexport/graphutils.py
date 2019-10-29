@@ -128,7 +128,9 @@ def get_nodes_data(graph, uids, pattern):
     
     
 def save_textures(destination, textures, names):
-    # ToDo: Parallelize saving with more than 2 textures.
+    # ToDo: Parallelize saving with more than a few textures?
+    #       Most classes and methods in Designer's Python API can only be called from the main application thread.
+    #       Don't bother for now.
     files = list()
     for i, tex in enumerate(textures):
         filepath = destination / (names[i] + ".tga")
@@ -183,15 +185,13 @@ def export_dds_files(graph, output_uids, destination, pattern, compression, max_
     
     # Handle case where maximum resolution was set.
     if max_resolution:
-        res_eq_max = (max_resolution in (out_x, out_y)) and (max_resolution == max(out_x, out_y))  # FixMe: Doesn't work with relative inheritance
         # Get new size.
+        # ToDo: There would be potential for optimization here when graph's size is already max_resolution,
+        #       but I can't seem to access parent's real size when inheritance is set to relative.
         res_x, res_y = get_clamped_resolution(out_x, out_y, max_resolution)
-        if not res_eq_max:
-            # Set inheritance to absolute, so we can set the resolution.
-            graph.setPropertyInheritanceMethod(out_size_prp, SDPropertyInheritanceMethod.Absolute)
-            graph.setPropertyValue(out_size_prp, SDValueInt2.sNew(int2(res_x, res_y)))
-    else:
-        res_eq_max = True
+        # Set inheritance to absolute, so we can set the resolution.
+        graph.setPropertyInheritanceMethod(out_size_prp, SDPropertyInheritanceMethod.Absolute)
+        graph.setPropertyValue(out_size_prp, SDValueInt2.sNew(int2(res_x, res_y)))
         
     # When no customization is set, export and auto-generate MIP levels.
     if not custom_lvls:
@@ -204,11 +204,6 @@ def export_dds_files(graph, output_uids, destination, pattern, compression, max_
         # ToDo: custom levels.
         '''
         # Create DDS for each resolution and stitch together.
-        for res in range(max_resolution, -1, -1):
-            # ToDo: Support non-square
-            graph.setPropertyValue(out_size_prp, SDValueInt2.sNew(int2(res_x, res_y)))
-            graph.compute()
-            # Get binary data from each output
             # Compress
             # add to dds
         # Write DDS to file.
@@ -216,7 +211,7 @@ def export_dds_files(graph, output_uids, destination, pattern, compression, max_
         feedback = "Not implemented yet"
     
     # Return graph to original resolution and inheritance if it was changed.
-    if (not res_eq_max) or custom_lvls:
+    if max_resolution or custom_lvls:
         graph.setPropertyInheritanceMethod(out_size_prp, out_size_inheritance)
         graph.setPropertyValue(out_size_prp, SDValueInt2.sNew(int2(out_x, out_y)))
         graph.compute()
