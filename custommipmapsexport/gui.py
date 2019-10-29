@@ -75,6 +75,7 @@ class ExportDialog(QtCore.QObject):
         current_item = self.tree.invisibleRootItem().child(0).child(0)
         self.tree.setCurrentItem(current_item)
         self.on_pattern_changed()
+        self.feedback.setText("")
         self.window.show()
 
     def show_warning(self, title, msg):

@@ -97,6 +97,7 @@ def compress_files(files, destination, compression):
     crunch_app = Path(__file__).resolve().parent / 'bin' / 'crunch_x64'
     cmd = [str(crunch_app),
            '-nostats',
+           '-noprogress',
            *chain(*[('-file', str(f)) for f in files]),
            '-fileformat', 'dds',
            '-outdir', str(destination),
