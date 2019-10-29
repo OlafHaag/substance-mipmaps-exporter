@@ -46,6 +46,8 @@ class ExportDialog(QtCore.QObject):
         btn_sel_all = self.window.findChild(QtWidgets.QPushButton, 'btn_sel_all')
         btn_sel_none = self.window.findChild(QtWidgets.QPushButton, 'btn_sel_none')
         btn_export = self.window.findChild(QtWidgets.QPushButton, 'btn_export')
+        btn_export_t2 = self.window.findChild(QtWidgets.QPushButton, 'btn_export_t2')
+        self.feedback = self.window.findChild(QtWidgets.QLabel, 'feedback_label')
         
         # Populate widgets with defaults.
         self.dest_edit.setText(self.destination_path)
@@ -249,12 +251,14 @@ class ExportDialog(QtCore.QObject):
             else:
                 max_res = None
             
-            export_dds_files(self.__graph,
-                             output_uids,
-                             self.destination_path,
-                             self.edit_pattern.text(),
-                             compression,
-                             max_res)
+            self.feedback.setText("Exporting...")
+            result = export_dds_files(self.__graph,
+                                      output_uids,
+                                      self.destination_path,
+                                      self.edit_pattern.text(),
+                                      compression,
+                                      max_resolution=max_res)
+            self.feedback.setText(result)
 
 
 def load_svg_icon(icon_name, size):
@@ -276,12 +280,12 @@ def load_svg_icon(icon_name, size):
     return None
     
     
-class MipMapExportGraphToolBar(QtWidgets.QToolBar):
+class MipmapExportGraphToolBar(QtWidgets.QToolBar):
     """ Toolbar to call the export ui dialog. """
     __toolbarList = {}
     
     def __init__(self, graphview_id, ui_manager):
-        super(MipMapExportGraphToolBar, self).__init__(parent=ui_manager.getMainWindow())
+        super(MipmapExportGraphToolBar, self).__init__(parent=ui_manager.getMainWindow())
         
         self.setObjectName('olafhaag.com.mipmap_export_toolbar')
         
@@ -294,15 +298,15 @@ class MipMapExportGraphToolBar(QtWidgets.QToolBar):
         self.dialog = self.load_ui(str(ui_file), parent=ui_manager.getMainWindow())
         
         # Add actions to our toolbar.
-        act = self.addAction(load_svg_icon("mipmapexport", DEFAULT_ICON_SIZE), "Export Custom MipMaps")
-        act.setToolTip("Export outputs with each resolution as a MIP-level to a DDS file.")
+        act = self.addAction(load_svg_icon("mipmapexport", DEFAULT_ICON_SIZE), "Export Custom Mipmaps")
+        act.setToolTip("Export outputs to compressed DDS files with mipmaps.")
         act.triggered.connect(self.dialog.show)
         
         self.__toolbarList[graphview_id] = weakref.ref(self)
-        self.destroyed.connect(partial(MipMapExportGraphToolBar.__on_toolbar_deleted, graphview_id=graphview_id))
+        self.destroyed.connect(partial(MipmapExportGraphToolBar.__on_toolbar_deleted, graphview_id=graphview_id))
     
     def tooltip(self):
-        return self.tr("MipMap Tools")
+        return self.tr("Mipmap Tools")
     
     def load_ui(self, filename, parent=None):
         """ Returns an instance of the exporter dialog. """
@@ -322,7 +326,7 @@ class MipMapExportGraphToolBar(QtWidgets.QToolBar):
 
 def on_new_graphview_created(graphview_id, ui_manager):
     # Create our toolbar.
-    toolbar = MipMapExportGraphToolBar(graphview_id, ui_manager)
+    toolbar = MipmapExportGraphToolBar(graphview_id, ui_manager)
     
     # Add our toolbar to the graph widget.
     ui_manager.addToolbarToGraphView(

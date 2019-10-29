@@ -26,7 +26,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Export Custom MipMaps</string>
+   <string>Export Custom Mipmaps</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="leftMargin">
@@ -43,6 +43,9 @@
    </property>
    <item>
     <layout class="QVBoxLayout" name="mainVerticalLayout">
+     <property name="spacing">
+      <number>5</number>
+     </property>
      <property name="sizeConstraint">
       <enum>QLayout::SetMinAndMaxSize</enum>
      </property>
@@ -65,8 +68,17 @@
          <string>From graph</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="spacing">
+          <number>5</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_2">
+           <property name="spacing">
+            <number>5</number>
+           </property>
            <item>
             <layout class="QFormLayout" name="formLayout">
              <property name="labelAlignment">
@@ -97,7 +109,7 @@
                <item>
                 <widget class="QPushButton" name="btn_browse">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -240,7 +252,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>output.dds</string>
+                  <string notr="true">output.dds</string>
                  </property>
                 </widget>
                </item>
@@ -380,6 +392,9 @@
             <layout class="QHBoxLayout" name="horizontalLayout_res">
              <item>
               <widget class="QLabel" name="max_res_label">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The exported textures will be set to have this resolution for the top MIP level. For non-square textures this is the maximum resolution of the larger dimension.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="text">
                 <string>Max. Resolution:</string>
                </property>
@@ -387,6 +402,9 @@
              </item>
              <item>
               <widget class="QComboBox" name="comboBox_res">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The exported textures will be set to have this resolution for the top MIP level. For non-square textures this is the maximum resolution of the larger dimension.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="currentText">
                 <string/>
                </property>
@@ -413,6 +431,9 @@
              </item>
              <item>
               <widget class="QCheckBox" name="check_graph_res">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Checking this will use the graph's current resolution setting.&lt;/p&gt;&lt;p&gt;Individual outputs may still inherit a different resolution.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="text">
                 <string>Use graph's resolution</string>
                </property>
@@ -443,7 +464,7 @@
            <item>
             <widget class="QPushButton" name="btn_export">
              <property name="text">
-              <string>Export MipMaps</string>
+              <string>Export Mipmaps</string>
              </property>
              <property name="default">
               <bool>true</bool>
@@ -463,9 +484,15 @@
        </widget>
        <widget class="QWidget" name="tab_2">
         <attribute name="title">
-         <string>Batch</string>
+         <string>Advanced</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_5">
+         <property name="spacing">
+          <number>5</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
          <item>
           <widget class="QLabel" name="nothing_label">
            <property name="enabled">
@@ -493,7 +520,7 @@
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>Start export</string>
+              <string>Export Mipmaps</string>
              </property>
             </widget>
            </item>
@@ -513,9 +540,22 @@
     </layout>
    </item>
    <item>
-    <widget class="QProgressBar" name="progress_bar">
-     <property name="value">
-      <number>24</number>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="feedback_label">
+     <property name="text">
+      <string notr="true"/>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
    </item>

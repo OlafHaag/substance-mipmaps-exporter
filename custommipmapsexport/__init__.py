@@ -1,6 +1,6 @@
 from functools import partial
 
-from .gui import get_ui_manager, MipMapExportGraphToolBar, on_new_graphview_created
+from .gui import get_ui_manager, MipmapExportGraphToolBar, on_new_graphview_created
 
 
 #
@@ -20,7 +20,7 @@ def initializeSDPlugin():
         # Register a callback to know when GraphViews are created. Creates the toolbar.
         graphview_created_callback_id = ui_manager.registerGraphViewCreatedCallback(partial(on_new_graphview_created,
                                                                                             ui_manager=ui_manager))
-        print("MipMap Export Plugin initialized.\n"
+        print("Mipmap Export Plugin initialized.\n"
               "Toolbar will be attached to newly opened graph views.")
 
 
@@ -30,6 +30,6 @@ def uninitializeSDPlugin():
     if ui_manager:
         global graphview_created_callback_id
         ui_manager.unregisterCallback(graphview_created_callback_id)
-        MipMapExportGraphToolBar.remove_all_toolbars()
+        MipmapExportGraphToolBar.remove_all_toolbars()
     
-    print("MipMap Export Plugin unloaded.")
+    print("Mipmap Export Plugin unloaded.")

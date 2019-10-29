@@ -97,22 +97,66 @@ def compress_files(files, destination, compression):
     crunch_app = Path(__file__).resolve().parent / 'bin' / 'crunch_x64'
     cmd = [str(crunch_app),
            '-nostats',
-           *chain(*zip(('-file',)*len(files), (str(f) for f in files))),
+           *chain(*[('-file', str(f)) for f in files]),
            '-fileformat', 'dds',
            '-outdir', str(destination),
            f'-{compression}']
     completed = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if completed.returncode != 0:
-        print(completed.stdout.decode())
+    print(completed.stdout.decode())
     return completed.returncode
 
 
-def export_dds_files(graph, output_uids, destination, pattern, compression, max_resolution=None, custom_lvls=False):
-    # ToDo: When export successful, feedback "Export done".
+def get_nodes_data(graph, uids, pattern):
+    data = {'uids': uids,
+            'nodes': [],
+            'identifiers': [],
+            'basenames': [],
+            'textures': []}
     
-    out_names = dict(map(lambda uid: (uid, get_output_name(graph, uid, pattern)), output_uids))
-    nodes = [graph.getNodeFromId(uid) for uid in output_uids]
-    sd_textures = [get_sd_tex(node) for node in nodes]
+    for uid in uids:
+        node = graph.getNodeFromId(uid)
+        data['nodes'].append(node)
+        data['identifiers'].append(node.getIdentifier())
+        data['basenames'].append(get_output_name(graph, uid, pattern))
+    return data
+    
+    
+def save_textures(destination, textures, names):
+    # ToDo: Parallelize saving with more than 2 textures.
+    files = list()
+    for i, tex in enumerate(textures):
+        filepath = destination / (names[i] + ".tga")
+        tex.save(str(filepath))
+        files.append(filepath)
+    return files
+
+
+def wait_files_exist(files, timeout=20.0, interval=0.2):
+    all_files_exist = False
+    while not all_files_exist:
+        all_files_exist = all([f.is_file() for f in files])
+        time.sleep(interval)
+        timeout -= interval
+        if timeout <= 0.0:
+            break
+
+
+def save_and_compress(intermediate_dir, destination_dir, textures, filenames, compression):
+    # First, save to intermediate file when not compressing data ourselves.
+    temp_files = save_textures(intermediate_dir, textures, filenames)
+    # Make sure all temp files are saved before continuing to compression.
+    wait_files_exist(temp_files)
+    # Call program to compress saved files.
+    return_code = compress_files(temp_files, destination_dir, compression)
+    if return_code == 0:
+        feedback = "Export done"
+    else:
+        feedback = "Error encountered. See console for details."
+    return feedback
+
+
+def export_dds_files(graph, output_uids, destination, pattern, compression, max_resolution=None, custom_lvls=False):
+    out_data = get_nodes_data(graph, output_uids, pattern)
     
     # Create path if it doesn't exist.
     # Also create temporary directory to save intermediate files.
@@ -120,72 +164,56 @@ def export_dds_files(graph, output_uids, destination, pattern, compression, max_
     try:
         temp_dir.mkdir(parents=True, exist_ok=True)
     except IOError:
-        # ToDo: When creating file fails, give feedback in GUI.
-        print("Failed to export paths:\n" + "\n".join([str(Path(destination) / (n + ".dds"))
-                                                       for n in out_names.values()]))
-        return
+        # When creating temp dir fails, abort and give feedback.
+        feedback = "Failed to export paths:\n" + "\n".join([str(Path(destination) / (n + ".dds"))
+                                                            for n in out_data['basenames']])
+        return feedback
         
-    # When no customization is set, export and compress as is.
-    if (not max_resolution) and (not custom_lvls):
-        # Make sure all the data is there.
-        graph.compute()
-        # ToDo: Parallelize saving with more than 2 textures.
-        # First, save to uncompressed file when not compressing data ourselves.
-        temp_files = list()
-        for i, tex in enumerate(sd_textures):
-            tmp_out = temp_dir / (out_names[nodes[i].getIdentifier()] + ".tga")
-            tex.save(str(tmp_out))
-            temp_files.append(tmp_out)
-        
-        time.sleep(1)  # ToDo: Make sure files are written before continuing.
-        # Call program to compress saved files.
-        return_code = compress_files(temp_files, destination, compression)
-        
-    else:
-        # Get property object and inheritance value.
-        out_size_prp = graph.getPropertyFromId('$outputsize', SDPropertyCategory.Input)
-        out_x, out_y = graph.getPropertyValue(out_size_prp).get()  # log2
-        out_size_inheritance = graph.getPropertyInheritanceMethod(out_size_prp)   # Get inheritance.
-        print(f'Output size: {2 ** out_x}x{2 ** out_y} px, {graph.getPropertyInheritanceMethod(out_size_prp)}')
-        
-        if max_resolution:
-            res_eq_max = max_resolution == max((out_x, out_y, max_resolution))
-            # Get new size.
-            res_x, res_y = get_clamped_resolution(out_x, out_y, max_resolution)
-        else:
-            res_eq_max = True
-            res_x, res_y = out_x, out_y  # FixMe: When relative, res == 0? Get real size.
-            
-        if (not res_eq_max) or custom_lvls:
+    # Get property object and inheritance value.
+    out_size_prp = graph.getPropertyFromId('$outputsize', SDPropertyCategory.Input)
+    out_x, out_y = graph.getPropertyValue(out_size_prp).get()  # log2
+    out_size_inheritance = graph.getPropertyInheritanceMethod(out_size_prp)   # Get inheritance.
+    
+    # Handle case where maximum resolution was set.
+    if max_resolution:
+        res_eq_max = (max_resolution in (out_x, out_y)) and (max_resolution == max(out_x, out_y))  # FixMe: Doesn't work with relative inheritance
+        # Get new size.
+        res_x, res_y = get_clamped_resolution(out_x, out_y, max_resolution)
+        if not res_eq_max:
             # Set inheritance to absolute, so we can set the resolution.
             graph.setPropertyInheritanceMethod(out_size_prp, SDPropertyInheritanceMethod.Absolute)
             graph.setPropertyValue(out_size_prp, SDValueInt2.sNew(int2(res_x, res_y)))
-        # Make sure all the data is there.
+    else:
+        res_eq_max = True
+        
+    # When no customization is set, export and auto-generate MIP levels.
+    if not custom_lvls:
+        # Make sure all the texture data is there.
         graph.compute()
-        
-        if custom_lvls:
-            '''
-            # Create DDS for each resolution and stitch together.
-            for res in range(max_resolution, -1, -1):
-                # ToDo: Support non-square
-                graph.setPropertyValue(out_size_prp, SDValueInt2.sNew(int2(res_x, res_y)))
-                graph.compute()
-                # Get binary data from each output
-                # Compress
-                # add to dds
-            # Write DDS to file.
-            '''
-            pass
-        else:
-            # ToDo: Save outputs to temporary files.
-            # ToDo: Subprocess crunch files
-            pass
-        
-        # Return graph to original resolution and inheritance if it was changed.
-        if (not res_eq_max) or custom_lvls:
-            graph.setPropertyInheritanceMethod(out_size_prp, out_size_inheritance)
-            graph.setPropertyValue(out_size_prp, SDValueInt2.sNew(int2(out_x, out_y)))
+        textures = [get_sd_tex(node) for node in out_data['nodes']]
+        feedback = save_and_compress(temp_dir, destination, textures, out_data['basenames'], compression)
+    
+    else:
+        # ToDo: custom levels.
+        '''
+        # Create DDS for each resolution and stitch together.
+        for res in range(max_resolution, -1, -1):
+            # ToDo: Support non-square
+            graph.setPropertyValue(out_size_prp, SDValueInt2.sNew(int2(res_x, res_y)))
             graph.compute()
+            # Get binary data from each output
+            # Compress
+            # add to dds
+        # Write DDS to file.
+        '''
+        feedback = "Not implemented yet"
+    
+    # Return graph to original resolution and inheritance if it was changed.
+    if (not res_eq_max) or custom_lvls:
+        graph.setPropertyInheritanceMethod(out_size_prp, out_size_inheritance)
+        graph.setPropertyValue(out_size_prp, SDValueInt2.sNew(int2(out_x, out_y)))
+        graph.compute()
     
     # Delete temp folder with contents.
     shutil.rmtree(temp_dir)
+    return feedback
