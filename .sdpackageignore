@@ -2,14 +2,22 @@
 # List of files ignored when packaging the plugin
 ##################################################
 
-# Ignore the packaging script.
-makepackage.py
+# Ignore git.
+.git/
+.gitignore
+
+# Ignore editor folders.
+.idea/
+.vscode/
 
 # Ignore the build directory.
 build/
 
 Ignore the example directory
 example/
+
+# Ignore the packaging script.
+makepackage.py
 
 # Ignore compiled python modules.
 *.pyc
