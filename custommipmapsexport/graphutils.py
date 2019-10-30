@@ -11,7 +11,7 @@ from sd.api.sdbasetypes import int2
 from sd.api.sdproperty import SDPropertyCategory, SDPropertyInheritanceMethod
 from sd.api.sdvaluetexture import SDValueTexture
 
-from .ddsfile import DDSFile
+#from .ddsfile import DDSFile
 
 
 def find_package_of_graph(graph):
