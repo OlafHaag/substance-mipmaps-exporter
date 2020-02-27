@@ -8,8 +8,13 @@ It has no influence on the generation of dds files in Designer.
 
 This plugin aims to work around that issue.  
 It does so by writing out the textures to an intermediate file format and
-then uses crunch (modified by [Unity-Technologies](https://github.com/Unity-Technologies/crunch/tree/unity)) to convert to dds. It's therefore a simple GUI wrapper for crunch.
+then uses crunch (modified by [Unity-Technologies](https://github.com/Unity-Technologies/crunch/tree/unity)) to convert to dds. It's therefore a simple GUI wrapper for crunch.  
+See it in action: https://youtu.be/T8MZ-Wr7OiM
 
+## Installation
+Download the latest release from the [release page](https://github.com/OlafHaag/substance-mipmaps-exporter/releases) (expand the *Assets* dropdown and download the *.sdplugin* file.  
+In Substance Designer's top-bar menu go to *Tools->Plugin Manager...*. In the dialog choose *INSTALL...*. Browse to the file you just downloaded.  
+If necessary, activate the *LOADED* checkbox. When you open a graph view the new plugin icon appears.
 
 ## Planned Features
 - Support custom MIP levels. You can set your network up to change the output depending on the graph's resolution (see example folder).
