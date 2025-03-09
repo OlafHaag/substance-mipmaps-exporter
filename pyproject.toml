@@ -1,0 +1,257 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "SubstanceDesignerDDSExporter"
+dynamic = ["version"]
+description = "This plugin for Adobe Substance 3D Designer adds support for exporting images to a direct draw surface (DDS) file."
+readme = "README.md"
+requires-python = "==3.11.*"
+keywords = [
+  "Substance Designer",
+  "textures",
+  "3D",
+  "compression",
+  "dds",
+  "direct draw surface",
+]
+authors = [{ name = "Olaf Haag", email = "contact@olafhaag.com" }]
+maintainers = [{ name = "Olaf Haag", email = "contact@olafhaag.com" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Multimedia :: Graphics",
+  "Topic :: Multimedia :: Graphics :: 3D Modeling",
+  "License :: OSI Approved :: MIT License",         # Added license classification
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pre-commit>=4.1.0",
+  "pytest >= 8.0.0",
+  "pytest-cov",
+  "pytest-mock >= 3.14.0",
+  "PySide6",
+]
+
+# Optional dependencies for developing the package
+[project.urls]
+Documentation = "https://github.com/OlafHaag/substance-mipmaps-exporter#readme"
+Issues = "https://github.com/OlafHaag/substance-mipmaps-exporter/issues"
+Source = "https://github.com/OlafHaag/substance-mipmaps-exporter"
+
+[tool.hatch.version]
+path = "src/custommipmapsexport/__about__.py"
+
+[tool.hatch.build]
+sources = ["src"]
+packages = ["src/custommipmapsexport"]
+
+[tool.hatch.envs.default]
+installer = "uv"
+description = "Python virtual environment in project dir to quickly get up and running in an IDE like VSCode."
+type = "virtual"
+features = ["dev"]
+post-install-commands = ["install-precommit"]
+
+[tool.hatch.envs.default.scripts]
+install-precommit = "pre-commit install --overwrite -t pre-commit -t commit-msg -t pre-push"
+
+[tool.hatch.envs.hatch-test]
+randomize = true
+parallel = true
+retries = 2
+retry-delay = 1
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.11"]
+
+[tool.hatch.envs.hatch-test.scripts]
+run = "pytest{env:HATCH_TEST_ARGS:} {args}"
+run-cov = "coverage run -m pytest{env:HATCH_TEST_ARGS:} {args}"
+cov-combine = "coverage combine"
+cov-html = "coverage html -d ./tests/.coverage"
+cov-report = ["coverage report", "cov-html"]
+
+[tool.hatch.envs.hatch-test.extra-scripts]
+pip = "{env:HATCH_UV} pip {args}"
+
+[tool.hatch.envs.hatch-static-analysis]
+dependencies = ["ruff==0.9.7"]
+# Disable the hatch's default config and use the one from the project.
+config-path = "none"
+
+[tool.hatch.envs.types]
+extra-dependencies = ["mypy==1.15.0", "pytest"]
+installer = "uv"
+post-install-commands = []
+
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/custommipmapsexport src/buildscripts tests}"
+
+# Workaround for mypy using pip instead of uv, to avoid "pip not found" error.
+[[tool.hatch.envs.types.matrix]]
+tool = ["uv"]
+
+[tool.hatch.envs.types.overrides]
+matrix.tool.installer = { value = "{matrix:tool}" }
+matrix.tool.scripts = [
+  { key = "pip", value = "{env:HATCH_UV} pip {args}", if = [
+    "uv",
+  ] },
+]
+
+[tool.ruff]
+line-length = 120
+builtins = ["_"]
+
+[tool.ruff.lint]
+select = [
+  "A",
+  "ANN",
+  "ARG",
+  "B",
+  "C",
+  "D",
+  "DTZ",
+  "E",
+  "EM",
+  "ERA",
+  "F",
+  "FBT",
+  "I",
+  "ICN",
+  "ISC",
+  "N",
+  "PLC",
+  "PLE",
+  "PLR",
+  "PLW",
+  "Q",
+  "RUF",
+  "S",
+  "T",
+  "T20",
+  "TID",
+  "UP",
+  "W",
+  "YTT",
+]
+ignore = [
+  # FastAPI uses a pattern of calling class constructors as function default arguments.
+  "B008",
+  # Allow non-abstract empty methods in abstract base classes
+  "B027",
+  # Allow unused arguments
+  "ARG002",
+  # Allow boolean positional values in function calls, like `dict.get(... True)`
+  "FBT003",
+  # Allow try-except-pass & try-except-continue
+  "S110",
+  "S112",
+  # Ignore complexity
+  "C901",
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0915",
+  # Exclude args, kwargs from annotation, allow dynamically typed expressions (typing.Any) in type annotations
+  "ANN002",
+  "ANN003",
+  "ANN401",
+  # Don't require documentation for every function parameter and magic methods.
+  "D417",
+  "D102",
+  "D104",
+  "D105",
+  "D107",
+  "D100",
+  # hatch recommends to ignore implicitly concatenated strings on a single line to avoid conflicts with the formatter.
+  "ISC001",
+]
+unfixable = [
+  # Don't touch unused imports
+  "F401",
+]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["custommipmapsexport", "sd"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+
+[tool.ruff.lint.flake8-annotations]
+mypy-init-return = true
+allow-star-arg-any = true
+ignore-fully-untyped = true
+suppress-none-returning = true
+
+[tool.ruff.lint.flake8-unused-arguments]
+ignore-variadic-names = true
+
+[tool.ruff.lint.pycodestyle]
+ignore-overlong-task-comments = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+ignore-decorators = ["typing.overload"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can use magic values, assertions, and relative imports
+"tests/**/*" = ["PLR2004", "S101", "TID252", "FBT001"]
+
+[tool.mypy]
+follow_imports = "silent"
+warn_redundant_casts = true
+warn_unused_ignores = false
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_reexport = true
+disable_error_code = ["import-untyped", "import-not-found"]
+explicit_package_bases = true
+plugins = []
+# for strict mypy:
+disallow_untyped_defs = false
+
+[tool.coverage.run]
+source_pkgs = ["custommipmapsexport", "buildscripts"]
+branch = true
+parallel = true
+omit = ["src/custommipmapsexport/__about__.py"]
+
+[tool.coverage.paths]
+coverage_debugging = ["src/custommipmapsexport", "src/buildscripts", "*/src"]
+
+[tool.coverage.report]
+include_namespace_packages = true
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
