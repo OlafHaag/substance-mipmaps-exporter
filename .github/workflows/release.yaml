@@ -1,0 +1,32 @@
+name: Release
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build artifacts
+        run: python -m buildscripts.makepackage
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./dist/*.sdplugin
+          name: ${{ github.repository_owner }}/${{ github.repository }} ${{ github.ref }}
+          draft: true
+          prerelease: ${{ contains(github.ref, '-') }}
+          generate_release_notes: true

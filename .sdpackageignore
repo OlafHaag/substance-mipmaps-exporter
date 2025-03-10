@@ -1,7 +1,6 @@
 ##################################################
 # List of files ignored when packaging the plugin
 ##################################################
-
 # Ignore git.
 .git/
 .gitignore
@@ -10,16 +9,16 @@
 .idea/
 .vscode/
 
-# Ignore the build directory.
-build/
+# Ignore the dist directory and build scripts.
+dist/
+buildscripts/
 
-Ignore the example directory
+# Ignore the example directory
 example/
 
-# Ignore the packaging script.
-makepackage.py
+# Ignore the debug.py file.
+debug.py
 
 # Ignore compiled python modules.
 *.pyc
 __pycache__
-

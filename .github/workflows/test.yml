@@ -1,0 +1,67 @@
+name: test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    types: [ready_for_review, reopened]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run on'
+        required: true
+        default: 'master'
+
+concurrency:
+  group: test-${{ github.head_ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: "1"
+  FORCE_COLOR: "1"
+
+jobs:
+  run:
+    name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.11']
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Hatch
+      run: pip install --upgrade hatch
+
+    - name: Run tests
+      run: hatch test --python ${{ matrix.python-version }} --cover
+
+    - name: Prepare artifact
+      run: |
+        mkdir artifact
+        cp -r tests/.profiles artifact/.profiles
+        cp -r tests/.coverage artifact/.coverage
+
+    - name: Upload performance & coverage report artifact
+      # Only upload the artifact for the first (most recent supported) Python version in the matrix.
+      if: strategy.job-index == 0
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-${{ matrix.os }}-Py${{ matrix.python-version }}
+        path: artifact
+        if-no-files-found: error
+
+    - name: Run static analysis
+      run: hatch fmt --check
+
+    - name: Run type-checking
+      run: hatch run types:check
