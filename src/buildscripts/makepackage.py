@@ -172,21 +172,21 @@ def package_plugin(plugin_dir: Path, extra_files: list[str | Path] | None = None
     error_msg = "Error while creating package. Check the logs for more details."
     try:
         repo_root = get_repository_root()
-        build_dir = repo_root / "build"
+        dist_dir = repo_root / "dist"
     except FileNotFoundError as e:
         logging.error(e)
         raise RuntimeError(error_msg) from e
 
     try:
-        build_dir.mkdir(parents=True, exist_ok=True)
+        dist_dir.mkdir(parents=True, exist_ok=True)
     except OSError as e:
-        logging.error(f"Error creating build directory: {e}")
+        logging.error(f"Error creating dist directory: {e}")
         raise RuntimeError(error_msg) from e
 
     # Save the current dir and switch to the package dir.
     saved_dir = Path.cwd()
 
-    package_filepath = build_dir / f"{plugin_dir.name}.sdplugin"
+    package_filepath = dist_dir / f"{plugin_dir.name}.sdplugin"
 
     try:
         file_filter = IgnoreFileFilter(repo_root / ".sdpackageignore")

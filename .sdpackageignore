@@ -9,8 +9,8 @@
 .idea/
 .vscode/
 
-# Ignore the build directory and build scripts.
-build/
+# Ignore the dist directory and build scripts.
+dist/
 buildscripts/
 
 # Ignore the example directory

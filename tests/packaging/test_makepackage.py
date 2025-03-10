@@ -321,9 +321,9 @@ class TestPackagePlugin:
         """
         # Arrange
         mock_get_repository_root.return_value = setup_repo
-        build_dir = setup_repo / "build"
+        dist_dir = setup_repo / "dist"
         plugin_dir = setup_repo / "src" / "test_plugin"
-        package_path = build_dir / "test_plugin.sdplugin"
+        package_path = dist_dir / "test_plugin.sdplugin"
 
         # Act
         package_plugin(
