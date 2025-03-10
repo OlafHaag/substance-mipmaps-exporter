@@ -1,9 +1,9 @@
 {
-    "metadata_format_version": "1",
-    "name": "custommipmapsexport",
-    "version": "0.1.0",
-    "author": "Olaf Haag",
-    "email": "contact@olafhaag.com",
-    "min_designer_version": "2019.2",
-    "platform": "win"
+  "author": "Olaf Haag",
+  "email": "contact@olafhaag.com",
+  "metadata_format_version": "1",
+  "min_designer_version": "14.1.0",
+  "name": "Custom Mipmaps Export",
+  "platform": "win",
+  "version": "0.1.1"
 }
