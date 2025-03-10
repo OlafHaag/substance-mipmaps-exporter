@@ -2,6 +2,7 @@
 # mypy: disable-error-code="attr-defined"
 import importlib.resources
 import weakref
+from enum import StrEnum
 from functools import partial
 from pathlib import Path
 from typing import ClassVar
@@ -43,58 +44,81 @@ class ExportDialog(QtCore.QObject):
         self.destination_path = str(Path(self.get_pkg_path()).parent)
         self.unchecked_tree_items: list[str] = []  # list of uids.
 
+        class WidgetNames(StrEnum):
+            DEST_EDIT = "edit_dest"
+            COMPRESSION = "comboBox_compression"
+            PATTERN = "edit_pattern"
+            PATTERN_PREVIEW = "pattern_preview"
+            TREE = "tree"
+            MAX_RESOLUTION = "comboBox_res"
+            USE_GRAPH_RESOLUTION = "check_graph_res"
+            BTN_BROWSE = "btn_browse"
+            BTN_SEL_ALL = "btn_sel_all"
+            BTN_SEL_NONE = "btn_sel_none"
+            BTN_EXPORT = "btn_export"
+            FEEDBACK = "feedback_label"
+            QUALITY = "quality_spinBox"
+            DXT_QUALITY = "dxt_quality_comboBox"
+            GENERATE_MIPMAPS = "mipsettings_groupBox"
+            FILTER = "mipfilter_comboBox"
+            GAMMA = "gamma_spinBox"
+            BLUR = "blur_spinBox"
+            MAX_MIP_LVLS = "max_lvls_spinBox"
+            WRAP = "wrap_checkBox"
+            BTN_EXPORT_T2 = "btn_export_t2"
+
         # Get references to widgets from tab1.
-        self.dest_edit = self.window.findChild(QtWidgets.QLineEdit, "edit_dest")
-        self.compression = self.window.findChild(QtWidgets.QComboBox, "comboBox_compression")
-        self.pattern = self.window.findChild(QtWidgets.QLineEdit, "edit_pattern")
-        self.pattern_preview = self.window.findChild(QtWidgets.QLabel, "pattern_preview")
-        self.tree = self.window.findChild(QtWidgets.QTreeWidget, "tree")
-        self.max_resolution = self.window.findChild(QtWidgets.QComboBox, "comboBox_res")
-        self.use_graph_resolution = self.window.findChild(QtWidgets.QCheckBox, "check_graph_res")
-        btn_browse = self.window.findChild(QtWidgets.QPushButton, "btn_browse")
-        btn_sel_all = self.window.findChild(QtWidgets.QPushButton, "btn_sel_all")
-        btn_sel_none = self.window.findChild(QtWidgets.QPushButton, "btn_sel_none")
-        self.btn_export = self.window.findChild(QtWidgets.QPushButton, "btn_export")
-        self.feedback = self.window.findChild(QtWidgets.QLabel, "feedback_label")
+        self.dest_edit = self.window.findChild(QtWidgets.QLineEdit, WidgetNames.DEST_EDIT)
+        self.compression = self.window.findChild(QtWidgets.QComboBox, WidgetNames.COMPRESSION)
+        self.pattern = self.window.findChild(QtWidgets.QLineEdit, WidgetNames.PATTERN)
+        self.pattern_preview = self.window.findChild(QtWidgets.QLabel, WidgetNames.PATTERN_PREVIEW)
+        self.tree = self.window.findChild(QtWidgets.QTreeWidget, WidgetNames.TREE)
+        self.max_resolution = self.window.findChild(QtWidgets.QComboBox, WidgetNames.MAX_RESOLUTION)
+        self.use_graph_resolution = self.window.findChild(QtWidgets.QCheckBox, WidgetNames.USE_GRAPH_RESOLUTION)
+        btn_browse = self.window.findChild(QtWidgets.QPushButton, WidgetNames.BTN_BROWSE)
+        btn_sel_all = self.window.findChild(QtWidgets.QPushButton, WidgetNames.BTN_SEL_ALL)
+        btn_sel_none = self.window.findChild(QtWidgets.QPushButton, WidgetNames.BTN_SEL_NONE)
+        self.btn_export = self.window.findChild(QtWidgets.QPushButton, WidgetNames.BTN_EXPORT)
+        self.feedback = self.window.findChild(QtWidgets.QLabel, WidgetNames.FEEDBACK)
 
         # Get references to widgets from tab2.
-        self.quality = self.window.findChild(QtWidgets.QSpinBox, "quality_spinBox")
-        self.dxt_quality = self.window.findChild(QtWidgets.QComboBox, "dxt_quality_comboBox")
-        self.generate_mipmaps = self.window.findChild(QtWidgets.QGroupBox, "mipsettings_groupBox")
-        self.filter = self.window.findChild(QtWidgets.QComboBox, "mipfilter_comboBox")
-        self.gamma = self.window.findChild(QtWidgets.QDoubleSpinBox, "gamma_spinBox")
-        self.blur = self.window.findChild(QtWidgets.QDoubleSpinBox, "blur_spinBox")
-        self.max_mip_lvls = self.window.findChild(QtWidgets.QSpinBox, "max_lvls_spinBox")
-        self.wrap = self.window.findChild(QtWidgets.QCheckBox, "wrap_checkBox")
-        self.btn_export_t2 = self.window.findChild(QtWidgets.QPushButton, "btn_export_t2")
+        self.quality = self.window.findChild(QtWidgets.QSpinBox, WidgetNames.QUALITY)
+        self.dxt_quality = self.window.findChild(QtWidgets.QComboBox, WidgetNames.DXT_QUALITY)
+        self.generate_mipmaps = self.window.findChild(QtWidgets.QGroupBox, WidgetNames.GENERATE_MIPMAPS)
+        self.filter = self.window.findChild(QtWidgets.QComboBox, WidgetNames.FILTER)
+        self.gamma = self.window.findChild(QtWidgets.QDoubleSpinBox, WidgetNames.GAMMA)
+        self.blur = self.window.findChild(QtWidgets.QDoubleSpinBox, WidgetNames.BLUR)
+        self.max_mip_lvls = self.window.findChild(QtWidgets.QSpinBox, WidgetNames.MAX_MIP_LVLS)
+        self.wrap = self.window.findChild(QtWidgets.QCheckBox, WidgetNames.WRAP)
+        self.btn_export_t2 = self.window.findChild(QtWidgets.QPushButton, WidgetNames.BTN_EXPORT_T2)
 
         # Ensure all widgets are found in the dialog.
         widgets = [
-            self.dest_edit,
-            self.compression,
-            self.pattern,
-            self.pattern_preview,
-            self.tree,
-            self.max_resolution,
-            self.use_graph_resolution,
-            btn_browse,
-            btn_sel_all,
-            btn_sel_none,
-            self.btn_export,
-            self.feedback,
-            self.quality,
-            self.dxt_quality,
-            self.generate_mipmaps,
-            self.filter,
-            self.gamma,
-            self.blur,
-            self.max_mip_lvls,
-            self.wrap,
-            self.btn_export_t2,
+            (self.dest_edit, WidgetNames.DEST_EDIT),
+            (self.compression, WidgetNames.COMPRESSION),
+            (self.pattern, WidgetNames.PATTERN),
+            (self.pattern_preview, WidgetNames.PATTERN_PREVIEW),
+            (self.tree, WidgetNames.TREE),
+            (self.max_resolution, WidgetNames.MAX_RESOLUTION),
+            (self.use_graph_resolution, WidgetNames.USE_GRAPH_RESOLUTION),
+            (btn_browse, WidgetNames.BTN_BROWSE),
+            (btn_sel_all, WidgetNames.BTN_SEL_ALL),
+            (btn_sel_none, WidgetNames.BTN_SEL_NONE),
+            (self.btn_export, WidgetNames.BTN_EXPORT),
+            (self.feedback, WidgetNames.FEEDBACK),
+            (self.quality, WidgetNames.QUALITY),
+            (self.dxt_quality, WidgetNames.DXT_QUALITY),
+            (self.generate_mipmaps, WidgetNames.GENERATE_MIPMAPS),
+            (self.filter, WidgetNames.FILTER),
+            (self.gamma, WidgetNames.GAMMA),
+            (self.blur, WidgetNames.BLUR),
+            (self.max_mip_lvls, WidgetNames.MAX_MIP_LVLS),
+            (self.wrap, WidgetNames.WRAP),
+            (self.btn_export_t2, WidgetNames.BTN_EXPORT_T2),
         ]
-        for widget in widgets:
+        for widget, name in widgets:
             if widget is None:
-                msg = f"Failed to find widget in dialog.ui: {widget}"
+                msg = f"Failed to find widget in {ui_file}: {name}"
                 raise RuntimeError(msg)
 
         # Populate widgets with defaults. We already checked for None, so ignore the type checker.
