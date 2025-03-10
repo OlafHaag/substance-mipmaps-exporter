@@ -419,7 +419,6 @@ class DDSFile:
             meta.caps1 |= DDSCAPS_COMPLEX | DDSCAPS_MIPMAP
             meta.mipmapCount = len(images)
 
-    # TODO Rename this here and in `add_image`
     def _initialize_pixel_format(self, meta, arg1):
         meta.pf_rgbBitCount = 32
         meta.pf_rBitMask = 0x00FF0000
