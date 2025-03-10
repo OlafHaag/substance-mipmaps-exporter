@@ -127,6 +127,15 @@ def add_file_to_package(
     :raises ValueError: If the archive folder is not a valid identifier.
     :raises OSError: If an error occurs while adding the file to the package.
     """
+    if not isinstance(filepath, Path):
+        msg = f"Expected 'filepath' to be a Path object, got {type(filepath).__name__}"
+        raise TypeError(msg)
+    if not isinstance(strip_path, Path):
+        msg = f"Expected 'strip_path' to be a Path object, got {type(strip_path).__name__}"
+        raise TypeError(msg)
+    if filepath.is_dir():
+        msg = f"Cannot add directory {filepath} to package"
+        raise ValueError(msg)
     logging.info(f"Adding file {filepath} to package")
     # Check that the archive folder can be used as a directory name.
     if archive_folder and not archive_folder.isidentifier():

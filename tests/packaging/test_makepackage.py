@@ -278,6 +278,55 @@ class TestAddFileToPackage:
             with pytest.raises(expected_error):  # type: ignore[call-overload]
                 add_file_to_package(zfile, tmp_path / strip_path / filepath, tmp_path / strip_path, archive_subdir)
 
+    def test_add_directory_error(self, tmp_path):
+        """Test edge case: Adding a directory instead of a file should raise an error."""
+        zip_file = tmp_path / "test.zip"
+        dir_path = tmp_path / "dir_to_add"
+        dir_path.mkdir(exist_ok=True)
+        with ZipFile(zip_file, "w") as zfile:
+            with pytest.raises(ValueError):
+                add_file_to_package(zfile, dir_path, tmp_path, "archive_subdir")
+
+    def test_filepath_outside_strip_path(self, tmp_path):
+        """Test edge case: The filepath is not within the expected strip_path."""
+        zip_file = tmp_path / "test.zip"
+        # Create a file outside the intended strip_path
+        filepath = tmp_path / "outside_file.txt"
+        filepath.write_bytes(b"test content")
+        # Provide a strip_path that does not contain the file
+        with ZipFile(zip_file, "w") as zfile:
+            with pytest.raises(ValueError):
+                add_file_to_package(zfile, filepath, tmp_path / "sub", "archive_subdir")
+
+    def test_strip_not_parent(self, tmp_path):
+        """Test edge case: strip_path is not a parent of filepath."""
+        zip_file = tmp_path / "test.zip"
+        base_dir = tmp_path / "base"
+        other_dir = tmp_path / "other"
+        base_dir.mkdir(exist_ok=True)
+        other_dir.mkdir(exist_ok=True)
+        file_path = other_dir / "file.txt"
+        file_path.write_bytes(b"test content")
+        with ZipFile(zip_file, "w") as zfile:
+            with pytest.raises(ValueError):
+                add_file_to_package(zfile, file_path, base_dir, "archive_subdir")
+
+    def test_non_path_arguments(self, tmp_path):
+        """Test edge case: Passing non-Path objects for filepath or strip_path should raise an error."""
+        zip_file = tmp_path / "test.zip"
+        file_path = tmp_path / "file.txt"
+        file_path.write_bytes(b"test content")
+
+        # Here, we pass a string instead of a Path for filepath
+        with ZipFile(zip_file, "w") as zfile:
+            with pytest.raises(TypeError):
+                add_file_to_package(zfile, str(file_path), tmp_path, "archive_subdir")
+
+        # Here, we pass a string instead of a Path for strip_path
+        with ZipFile(zip_file, "w") as zfile:
+            with pytest.raises(TypeError):
+                add_file_to_package(zfile, file_path, "invalid_strip_path", "archive_subdir")
+
 
 class TestPackagePlugin:
     """Test suite for the package_plugin function."""
