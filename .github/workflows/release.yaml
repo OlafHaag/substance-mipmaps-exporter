@@ -19,7 +19,7 @@ jobs:
 
       - name: Build artifacts
         env:
-          PYTHONPATH: ${{ github.workspace }}
+          PYTHONPATH: ${{ github.workspace }}/src
         run: python -m buildscripts.makepackage
 
       - name: Create Release
