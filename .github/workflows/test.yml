@@ -5,7 +5,7 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-    types: [ready_for_review, reopened]
+    types: [opened, ready_for_review, reopened, synchronize]
   workflow_dispatch:
     inputs:
       branch:
@@ -48,7 +48,6 @@ jobs:
     - name: Prepare artifact
       run: |
         mkdir artifact
-        cp -r tests/.profiles artifact/.profiles
         cp -r tests/.coverage artifact/.coverage
 
     - name: Upload performance & coverage report artifact
