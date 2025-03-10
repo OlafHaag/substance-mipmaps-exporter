@@ -18,6 +18,8 @@ jobs:
           python-version: '3.11'
 
       - name: Build artifacts
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: python -m buildscripts.makepackage
 
       - name: Create Release
