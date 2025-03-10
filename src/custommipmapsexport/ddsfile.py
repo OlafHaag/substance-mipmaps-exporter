@@ -384,10 +384,10 @@ class DDSFile:
             meta.flags |= DDSD_LINEARSIZE
             meta.pitchOrLinearSize = len(data)
 
-            self._extracted_from_add_image_(meta, 0xFF000000)
+            self._initialize_pixel_format(meta, 0xFF000000)
             if fmt in ("rgb", "rgba"):
                 meta.pf_flags |= DDPF_RGB
-                self._extracted_from_add_image_(meta, 0x00000000)
+                self._initialize_pixel_format(meta, 0x00000000)
                 if fmt == "rgba":
                     meta.pf_flags |= DDPF_ALPHAPIXELS
                     meta.pf_aBitMask = 0xFF000000
@@ -420,7 +420,7 @@ class DDSFile:
             meta.mipmapCount = len(images)
 
     # TODO Rename this here and in `add_image`
-    def _extracted_from_add_image_(self, meta, arg1):
+    def _initialize_pixel_format(self, meta, arg1):
         meta.pf_rgbBitCount = 32
         meta.pf_rBitMask = 0x00FF0000
         meta.pf_gBitMask = 0x0000FF00
